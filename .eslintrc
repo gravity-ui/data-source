@@ -1,0 +1,19 @@
+{
+    "root": true,
+    "extends": [
+        "@gravity-ui/eslint-config",
+        "@gravity-ui/eslint-config/client",
+        "@gravity-ui/eslint-config/prettier",
+        "@gravity-ui/eslint-config/import-order"
+    ],
+    "parserOptions": {
+        "project": "tsconfig.json"
+    },
+    "ignorePatterns": ["/*", "!/src"],
+    "rules": {
+        "callback-return": "off",
+        "react-hooks/exhaustive-deps": "error",
+        "@typescript-eslint/consistent-type-imports": "error",
+        "@typescript-eslint/consistent-type-exports": "error"
+    }
+}

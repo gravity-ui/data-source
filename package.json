@@ -1,0 +1,67 @@
+{
+  "name": "@gravity-ui/data-source",
+  "version": "0.0.0",
+  "description": "A wrapper around data fetching",
+  "keywords": [
+    "data-fetching",
+    "react",
+    "react-query",
+    "gravity-ui"
+  ],
+  "author": "Mikhail Golbakh <golbah@yandex.ru>",
+  "license": "MIT",
+  "homepage": "https://github.com/gravity-ui/data-source#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gravity-ui/data-source.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gravity-ui/data-source/issues"
+  },
+  "engines": {
+    "node": ">= 18",
+    "npm": ">= 9",
+    "yarn": "Please use npm instead of yarn to install dependencies",
+    "pnpm": "Please use npm instead of pnpm to install dependencies"
+  },
+  "main": "build/cjs/index.js",
+  "module": "build/esm/index.js",
+  "types": "build/esm/index.d.ts",
+  "files": [
+    "build"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "NODE_ENV=production app-builder build",
+    "clean": "rm -rf build",
+    "deps:ci": "npm ci",
+    "lint": "eslint .",
+    "lint:fix": "npm run lint -- --fix",
+    "prepare": "husky install",
+    "prepublishOnly": "npm run build",
+    "test": "jest --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2",
+    "@gravity-ui/app-builder": "^0.11.1",
+    "@gravity-ui/eslint-config": "^3.2.0",
+    "@gravity-ui/prettier-config": "^1.1.0",
+    "@gravity-ui/tsconfig": "^1.0.0",
+    "@swc/jest": "^0.2.36",
+    "@tanstack/react-query": "^4.36.1",
+    "@types/jest": "^29.5.12",
+    "@types/react": "^18.3.3",
+    "eslint": "^8.57.0",
+    "husky": "^9.0.11",
+    "jest": "^29.7.0",
+    "nano-staged": "^0.8.0",
+    "react": "^18.3.1",
+    "utility-types": "^3.11.0"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^4.0.0",
+    "react": "^16.0.0 || ^17.0.0 || ^18.0.0"
+  }
+}

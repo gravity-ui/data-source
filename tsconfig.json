@@ -1,0 +1,7 @@
+{
+  "extends": "@gravity-ui/tsconfig",
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "compilerOptions": {
+    "jsx": "react"
+  }
+}

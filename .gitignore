@@ -1,0 +1,18 @@
+# Modules
+node_modules
+
+# Artifacts
+build
+
+# Editor configs
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Misc
+.DS_Store
