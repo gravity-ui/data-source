@@ -1,3 +1,4 @@
+import {InfiniteQueryDataObserver} from './observer';
 import type {InfiniteQueryDataSource} from './types';
 
 export const makeInfiniteQueryDataSource = <TParams, TRequest, TResponse, TData, TError>(
@@ -5,4 +6,7 @@ export const makeInfiniteQueryDataSource = <TParams, TRequest, TResponse, TData,
 ): InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError> => ({
     ...config,
     type: 'infinite',
+    observe(context, params, options) {
+        return new InfiniteQueryDataObserver(context, this, params, options);
+    },
 });

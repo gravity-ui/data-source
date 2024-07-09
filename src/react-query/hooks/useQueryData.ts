@@ -1,4 +1,10 @@
-import type {DataSourceOptions, DataSourceParams, DataSourceState} from '../../core';
+import type {
+    DataSourceContext,
+    DataSourceOptions,
+    DataSourceParams,
+    DataSourceState,
+} from '../../core';
+import {useData} from '../../react';
 import {useInfiniteQueryData} from '../impl/infinite/hooks';
 import {usePlainQueryData} from '../impl/plain/hooks';
 import type {AnyQueryDataSource} from '../types';
@@ -26,4 +32,16 @@ export const useQueryData = <TDataSource extends AnyQueryDataSource>(
     }
 
     return state as DataSourceState<TDataSource>;
+};
+
+// Do not use it yet. It will be reworked
+export const _useQueryData = <TDataSource extends AnyQueryDataSource>(
+    dataSource: TDataSource,
+    params: DataSourceParams<TDataSource>,
+    options?: DataSourceOptions<TDataSource>,
+) => {
+    const context = useQueryContext() as DataSourceContext<TDataSource>;
+    const [state] = useData<TDataSource>(dataSource, context, params, options);
+
+    return state;
 };

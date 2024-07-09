@@ -1,0 +1,69 @@
+import type {InfiniteQueryObserverResult} from '@tanstack/react-query';
+import {InfiniteQueryObserver} from '@tanstack/react-query';
+
+import type {
+    DataListener,
+    DataObserver,
+    DataSourceContext,
+    DataSourceData,
+    DataSourceError,
+    DataSourceOptions,
+    DataSourceParams,
+    DataSourceResponse,
+} from '../../../core';
+
+import type {AnyInfiniteQueryDataSource} from './types';
+import {composeOptions, transformResult} from './utils';
+
+export class InfiniteQueryDataObserver<
+    TDataSource extends AnyInfiniteQueryDataSource,
+    TContext extends DataSourceContext<TDataSource> = DataSourceContext<TDataSource>,
+    TParams extends DataSourceParams<TDataSource> = DataSourceParams<TDataSource>,
+    TResponse extends DataSourceResponse<TDataSource> = DataSourceResponse<TDataSource>,
+    TData extends DataSourceData<TDataSource> = DataSourceData<TDataSource>,
+    TError extends DataSourceError<TDataSource> = DataSourceError<TDataSource>,
+    TOptions extends DataSourceOptions<TDataSource> = DataSourceOptions<TDataSource>,
+> implements DataObserver<TDataSource>
+{
+    readonly context: TContext;
+    readonly dataSource: TDataSource;
+    readonly observer: InfiniteQueryObserver<TResponse, TError, TData, TResponse>;
+
+    constructor(context: TContext, dataSource: TDataSource, params: TParams, options?: TOptions) {
+        this.context = context;
+        this.dataSource = dataSource;
+        this.observer = new InfiniteQueryObserver(
+            context.queryClient,
+            this.composeOptions(context, dataSource, params, options),
+        );
+    }
+
+    getCurrentState() {
+        return this.transformResult(this.observer.getCurrentResult());
+    }
+
+    updateParams(params: TParams, options?: TOptions) {
+        this.observer.setOptions(
+            this.composeOptions(this.context, this.dataSource, params, options),
+        );
+    }
+
+    subscribe(listener: DataListener<TDataSource>) {
+        return this.observer.subscribe((result) => {
+            listener(this.transformResult(result));
+        });
+    }
+
+    private composeOptions(
+        context: TContext,
+        dataSource: TDataSource,
+        params: TParams,
+        options?: TOptions,
+    ) {
+        return composeOptions(context, dataSource, params, options);
+    }
+
+    private transformResult(result: InfiniteQueryObserverResult<TData, TError>) {
+        return transformResult<TDataSource>(result);
+    }
+}
