@@ -37,7 +37,7 @@
     "deps:ci": "npm ci",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
-    "prepare": "husky install",
+    "prepare": "husky",
     "prepublishOnly": "npm run build",
     "test": "jest --passWithNoTests",
     "typecheck": "tsc --noEmit"
