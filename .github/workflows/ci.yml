@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - next
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  precommit:
+    name: Precommit checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+      - name: Install Packages
+        run: npm ci
+      - name: Lint Files
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
