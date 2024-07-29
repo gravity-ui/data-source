@@ -1,4 +1,4 @@
-# Data Source
+# Data Source &middot; [![npm version](https://img.shields.io/npm/v/@gravity-ui/data-source?logo=npm&label=version)](https://www.npmjs.com/package/@gravity-ui/data-source) [![ci](https://img.shields.io/github/actions/workflow/status/gravity-ui/data-source/ci.yml?branch=main&label=ci&logo=github)](https://github.com/gravity-ui/data-source/actions/workflows/ci.yml?query=branch:main)
 
 **Data Source** is a simple wrapper around data fetching. It is a kind of "port" in [clean architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html). It allows you to make wrappers for stuff around data fetching depending on your use cases. **Data Source** uses [react-query](https://tanstack.com/query/latest) under the hood.
 
