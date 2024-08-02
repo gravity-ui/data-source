@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/gravity-ui/data-source/compare/v0.1.0...v0.1.1) (2024-08-02)
+
+
+### Bug Fixes
+
+* **react:** add exports for error props ([#4](https://github.com/gravity-ui/data-source/issues/4)) ([a86c45b](https://github.com/gravity-ui/data-source/commit/a86c45b70b9119b8f276ea0140c78b3d9c02060e))
+
 ## 0.1.0 (2024-07-29)
 
 
