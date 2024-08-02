@@ -3,6 +3,8 @@ export type {
     DataSourceTag,
     DataSource,
     AnyDataSource,
+    DataObserver,
+    DataListener,
     DataSourceContext,
     DataSourceParams,
     DataSourceRequest,

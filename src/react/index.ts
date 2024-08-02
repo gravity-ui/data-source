@@ -1,3 +1,5 @@
+export {useData} from './useData';
+
 export {DataManagerContext, useDataManager} from './DataManagerContext';
 
 export type {WithDataManagerProps} from './withDataManager';

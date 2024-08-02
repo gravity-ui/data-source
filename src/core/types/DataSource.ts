@@ -24,6 +24,11 @@ export interface DataSource<
         fetchContext: TFetchContext,
         request: TRequest,
     ) => Promise<TResponse> | TResponse;
+    observe: (
+        context: TContext,
+        params: ActualParams<this, TParams, TRequest>,
+        options?: TOptions,
+    ) => DataObserver<this>;
     tags?: (params: ActualParams<this, TParams, TRequest>) => DataSourceTag[];
 
     transformParams?: (params: TParams) => TRequest;
@@ -37,6 +42,19 @@ export interface DataSource<
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyDataSource = DataSource<any, any, any, any, any, any, any, any, any>;
+
+export interface DataObserver<TDataSource extends AnyDataSource> {
+    getCurrentState(): DataSourceState<TDataSource>;
+    updateParams(
+        params: DataSourceParams<TDataSource>,
+        options?: DataSourceOptions<TDataSource>,
+    ): void;
+    subscribe(listener: DataListener<TDataSource>): () => void;
+}
+
+export type DataListener<TDataSource extends AnyDataSource> = (
+    state: DataSourceState<TDataSource>,
+) => void;
 
 export type DataSourceContext<TDataSource> =
     TDataSource extends DataSource<
