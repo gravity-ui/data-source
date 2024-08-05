@@ -14,6 +14,9 @@ export const DataInfiniteLoader = <TError,>({
     LoadingView,
     ErrorView,
     MoreView,
+    loadingViewProps,
+    errorViewProps,
+    moreViewProps,
     children,
 }: DataInfiniteLoaderProps<TError>): React.ReactNode => {
     const errorAction = React.useMemo<ErrorViewProps<TError>['action']>(
@@ -22,36 +25,32 @@ export const DataInfiniteLoader = <TError,>({
         [errorActionProp],
     );
 
-    const content = React.useMemo(() => {
+    const renderContent = () => {
         if (status === 'loading') {
-            return <LoadingView />;
+            return <LoadingView {...loadingViewProps} />;
         }
 
         if (status === 'error') {
-            return <ErrorView error={error} action={errorAction} />;
+            return <ErrorView error={error} action={errorAction} {...errorViewProps} />;
         }
 
         if (status === 'success' && hasNextPage) {
-            return <MoreView isLoading={isFetchingNextPage} onClick={fetchNextPage} />;
+            return (
+                <MoreView
+                    isLoading={isFetchingNextPage}
+                    onClick={fetchNextPage}
+                    {...moreViewProps}
+                />
+            );
         }
 
         return null;
-    }, [
-        status,
-        hasNextPage,
-        LoadingView,
-        ErrorView,
-        error,
-        errorAction,
-        MoreView,
-        isFetchingNextPage,
-        fetchNextPage,
-    ]);
+    };
 
     return (
         <>
             {status === 'success' ? children : null}
-            {content}
+            {renderContent()}
         </>
     );
 };
