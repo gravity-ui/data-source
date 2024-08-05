@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/gravity-ui/data-source/compare/v0.1.2...v0.2.0) (2024-08-05)
+
+
+### Features
+
+* **react:** add custom props for data loader components ([#8](https://github.com/gravity-ui/data-source/issues/8)) ([b4d12de](https://github.com/gravity-ui/data-source/commit/b4d12dea1e94f3267732698f9f4a20aa90c6baac))
+
 ## [0.1.2](https://github.com/gravity-ui/data-source/compare/v0.1.1...v0.1.2) (2024-08-05)
 
 
