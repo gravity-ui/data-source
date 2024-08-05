@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/gravity-ui/data-source/compare/v0.1.1...v0.1.2) (2024-08-05)
+
+
+### Bug Fixes
+
+* install utlity-types package as dependency ([#6](https://github.com/gravity-ui/data-source/issues/6)) ([783c929](https://github.com/gravity-ui/data-source/commit/783c929d3945a55ef15b26df1edf20850ef780fa))
+
 ## [0.1.1](https://github.com/gravity-ui/data-source/compare/v0.1.0...v0.1.1) (2024-08-02)
 
 
