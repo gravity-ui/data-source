@@ -1,2 +1,2 @@
-export type {DataInfiniteLoaderProps} from './types';
+export type {MoreViewProps, DataInfiniteLoaderProps} from './types';
 export {DataInfiniteLoader} from './DataInfiniteLoader';

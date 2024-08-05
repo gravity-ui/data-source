@@ -15,7 +15,7 @@ export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError> = 
     TResponse,
     TData,
     TError,
-    QueryObserverOptions<TResponse, TError, ActualData<TData, TResponse>>,
+    QueryObserverOptions<TResponse, TError, ActualData<TData, TResponse>, TResponse>,
     ResultWrapper<QueryObserverResult<ActualData<TData, TResponse>, TError>>,
     QueryFunctionContext<DataSourceKey, unknown>
 > & {
