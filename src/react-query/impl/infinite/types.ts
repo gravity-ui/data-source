@@ -15,7 +15,7 @@ export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError>
     TResponse,
     TData,
     TError,
-    InfiniteQueryObserverOptions<TResponse, TError, ActualData<TData, TResponse>>,
+    InfiniteQueryObserverOptions<TResponse, TError, ActualData<TData, TResponse>, TResponse>,
     ResultWrapper<InfiniteQueryObserverResult<ActualData<TData, TResponse>, TError>>,
     QueryFunctionContext<DataSourceKey, TParams>
 > & {
