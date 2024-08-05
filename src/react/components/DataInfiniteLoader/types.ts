@@ -8,15 +8,23 @@ export interface MoreViewProps {
     onClick: () => void;
 }
 
-export interface DataInfiniteLoaderProps<TError> {
+export interface DataInfiniteLoaderProps<
+    TError,
+    TLoadingViewProps extends {} = {},
+    TErrorViewProps extends ErrorViewProps<TError> = ErrorViewProps<TError>,
+    TMoreViewProps extends MoreViewProps = MoreViewProps,
+> {
     status: DataLoaderStatus;
     error: TError | null;
     errorAction?: ErrorAction | ErrorAction['handler'];
     hasNextPage: boolean;
     fetchNextPage: () => unknown;
     isFetchingNextPage: boolean;
-    LoadingView: ComponentType;
-    ErrorView: ComponentType<ErrorViewProps<TError>>;
-    MoreView: ComponentType<MoreViewProps>;
+    LoadingView: ComponentType<TLoadingViewProps>;
+    ErrorView: ComponentType<TErrorViewProps>;
+    MoreView: ComponentType<TMoreViewProps>;
+    loadingViewProps?: TLoadingViewProps;
+    errorViewProps?: Omit<TErrorViewProps, keyof ErrorViewProps<TError>>;
+    moreViewProps?: Omit<TMoreViewProps, keyof MoreViewProps>;
     children: ReactNode;
 }

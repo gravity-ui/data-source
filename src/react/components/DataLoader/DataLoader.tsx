@@ -10,6 +10,8 @@ export const DataLoader = <TError,>({
     errorAction: errorActionProp,
     LoadingView,
     ErrorView,
+    loadingViewProps,
+    errorViewProps,
     children,
 }: DataLoaderProps<TError>): React.ReactNode => {
     const errorAction = React.useMemo<ErrorViewProps<TError>['action']>(
@@ -19,11 +21,11 @@ export const DataLoader = <TError,>({
     );
 
     if (status === 'loading') {
-        return <LoadingView />;
+        return <LoadingView {...loadingViewProps} />;
     }
 
     if (status === 'error') {
-        return <ErrorView error={error} action={errorAction} />;
+        return <ErrorView error={error} action={errorAction} {...errorViewProps} />;
     }
 
     return <>{children}</>;
