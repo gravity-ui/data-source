@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.1](https://github.com/gravity-ui/data-source/compare/v0.2.0...v0.2.1) (2024-08-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* `next` and `prev` are `Partial<TRequest> | undefined` instead of `Partial<TResponse> | undefined`
+* DataSource no longer supports in `ActualParams` type
+
+
+### Bug Fixes
+
+* make page param patch for request ([#11](https://github.com/gravity-ui/data-source/issues/11)) ([e76f88e](https://github.com/gravity-ui/data-source/commit/e76f88e8426d24c32df9615f5a678f923bb2c84e))
+
 ## [0.2.0](https://github.com/gravity-ui/data-source/compare/v0.1.2...v0.2.0) (2024-08-05)
 
 
