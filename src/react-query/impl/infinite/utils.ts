@@ -4,17 +4,17 @@ import type {
     QueryFunctionContext,
 } from '@tanstack/react-query';
 
-import {
-    type DataSourceContext,
-    type DataSourceData,
-    type DataSourceError,
-    type DataSourceKey,
-    type DataSourceOptions,
-    type DataSourceParams,
-    type DataSourceResponse,
-    type DataSourceState,
-    composeFullKey,
-    idle,
+import {composeFullKey, idle} from '../../../core';
+import type {
+    DataSourceContext,
+    DataSourceData,
+    DataSourceError,
+    DataSourceKey,
+    DataSourceOptions,
+    DataSourceParams,
+    DataSourceRequest,
+    DataSourceResponse,
+    DataSourceState,
 } from '../../../core';
 import {normalizeStatus} from '../../utils/normalizeStatus';
 
@@ -40,31 +40,24 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
         enabled: params !== idle,
         queryKey: composeFullKey(dataSource, params),
         queryFn: (
-            fetchContext: QueryFunctionContext<DataSourceKey, DataSourceParams<TDataSource>>,
+            fetchContext: QueryFunctionContext<
+                DataSourceKey,
+                Partial<DataSourceRequest<TDataSource>> | undefined
+            >,
         ) => {
-            const actualParams = fetchContext.pageParam ?? params;
+            const actualParams = transformParams ? transformParams(params) : params;
+            const request =
+                typeof actualParams === 'object'
+                    ? {...actualParams, ...fetchContext.pageParam}
+                    : actualParams;
 
-            return dataSource.fetch(
-                context,
-                fetchContext,
-                transformParams ? transformParams(actualParams) : actualParams,
-            );
+            return dataSource.fetch(context, fetchContext, request);
         },
         select: transformResponse
             ? (data) => ({...data, pages: data.pages.map(transformResponse)})
             : undefined,
-        getNextPageParam: (lastPage, allPages) => {
-            const nextParamsPatch = next(lastPage, allPages);
-
-            return nextParamsPatch ? {...params, ...nextParamsPatch} : undefined;
-        },
-        getPreviousPageParam: prev
-            ? (firstPage, allPages) => {
-                  const prevParamsPatch = prev(firstPage, allPages);
-
-                  return prevParamsPatch ? {...params, ...prevParamsPatch} : undefined;
-              }
-            : undefined,
+        getNextPageParam: next,
+        getPreviousPageParam: prev,
         ...options,
     };
 };

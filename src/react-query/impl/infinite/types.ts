@@ -17,11 +17,11 @@ export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError>
     TError,
     InfiniteQueryObserverOptions<TResponse, TError, ActualData<TData, TResponse>, TResponse>,
     ResultWrapper<InfiniteQueryObserverResult<ActualData<TData, TResponse>, TError>>,
-    QueryFunctionContext<DataSourceKey, TParams>
+    QueryFunctionContext<DataSourceKey, Partial<TRequest> | undefined>
 > & {
     type: 'infinite';
-    next: (lastPage: TResponse, allPages: TResponse[]) => Partial<TParams> | undefined;
-    prev?: (firstPage: TResponse, allPages: TResponse[]) => Partial<TParams> | undefined;
+    next: (lastPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | undefined;
+    prev?: (firstPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | undefined;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
