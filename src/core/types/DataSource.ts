@@ -24,7 +24,7 @@ export interface DataSource<
         fetchContext: TFetchContext,
         request: TRequest,
     ) => Promise<TResponse> | TResponse;
-    tags?: (params: ActualParams<this, TParams, TRequest>) => DataSourceTag[];
+    tags?: (params: ActualParams<TParams, TRequest>) => DataSourceTag[];
 
     transformParams?: (params: TParams) => TRequest;
     transformResponse?: (response: TResponse) => TData;
@@ -65,7 +65,7 @@ export type DataSourceParams<TDataSource> =
         infer _TState,
         infer _TFetchContext
     >
-        ? ActualParams<TDataSource, TParams, TRequest>
+        ? ActualParams<TParams, TRequest>
         : never;
 
 export type DataSourceRequest<TDataSource> =
@@ -173,12 +173,8 @@ export type DataSourceFetchContext<TDataSource> =
         ? TFetchContext
         : never;
 
-export type ActualParams<TDataSource extends AnyDataSource, TParams, TRequest> =
-    | (unknown extends TParams
-          ? TRequest
-          : undefined extends TDataSource['transformParams']
-            ? TRequest
-            : TParams)
+export type ActualParams<TParams, TRequest> =
+    | (unknown extends TParams ? TRequest : TParams)
     | typeof idle;
 
 export type ActualData<TData, TResponse> = unknown extends TData ? TResponse : TData;
