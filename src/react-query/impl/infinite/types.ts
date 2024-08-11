@@ -1,4 +1,5 @@
 import type {
+    InfiniteData,
     InfiniteQueryObserverOptions,
     InfiniteQueryObserverResult,
     QueryFunctionContext,
@@ -15,22 +16,50 @@ export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError>
     TResponse,
     TData,
     TError,
-    InfiniteQueryObserverOptions<TResponse, TError, ActualData<TData, TResponse>, TResponse>,
-    ResultWrapper<InfiniteQueryObserverResult<ActualData<TData, TResponse>, TError>>,
-    QueryFunctionContext<DataSourceKey, Partial<TRequest> | undefined>
+    InfiniteQueryObserverOptions<
+        TResponse,
+        TError,
+        InfiniteData<ActualData<TData, TResponse>, Partial<TRequest>>,
+        TResponse,
+        DataSourceKey,
+        Partial<TRequest>
+    >,
+    ResultWrapper<
+        InfiniteQueryObserverResult<
+            InfiniteData<ActualData<TData, TResponse>, Partial<TRequest>>,
+            TError
+        >,
+        TRequest,
+        TResponse,
+        TData,
+        TError
+    >,
+    QueryFunctionContext<DataSourceKey, Partial<TRequest>>
 > & {
     type: 'infinite';
-    next: (lastPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | undefined;
-    prev?: (firstPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | undefined;
+    next: (lastPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | null | undefined;
+    prev?: (firstPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | null | undefined;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyInfiniteQueryDataSource = InfiniteQueryDataSource<any, any, any, any, any>;
 
-type ResultWrapper<T> =
-    T extends InfiniteQueryObserverResult<infer TData>
-        ? Overwrite<T, {status: DataLoaderStatus; data: TData}> & {
-              originalStatus: T['status'];
-              originalData: T['data'];
+// It is used instead of `Partial<DataSourceRequest<TDataSource>>` because TS can't calculate type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyPageParam = Partial<any>;
+
+type ResultWrapper<TResult, TRequest, TResponse, TData, TError> =
+    TResult extends InfiniteQueryObserverResult<
+        InfiniteData<ActualData<TData, TResponse>, Partial<TRequest>>,
+        TError
+    >
+        ? Overwrite<
+              TResult,
+              {status: DataLoaderStatus; data: DataWrapper<ActualData<TData, TResponse>>}
+          > & {
+              originalStatus: TResult['status'];
+              originalData: TResult['data'];
           }
         : never;
+
+type DataWrapper<TActualData> = FlatArray<Array<TActualData>, 1>;

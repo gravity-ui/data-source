@@ -1,6 +1,6 @@
 import type {idle} from '../constants';
 
-export type DataSourceKey = readonly unknown[];
+export type DataSourceKey = ReadonlyArray<unknown>;
 export type DataSourceTag = string;
 
 declare const errorHintSymbol: unique symbol;
@@ -31,7 +31,7 @@ export interface DataSource<
 
     [errorHintSymbol]?: TError;
 
-    options?: TOptions;
+    options?: Partial<TOptions>;
     [stateHintSymbol]?: TState;
 }
 

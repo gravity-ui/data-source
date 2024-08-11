@@ -1,4 +1,6 @@
+import {skipToken} from '@tanstack/react-query';
 import type {
+    InfiniteData,
     InfiniteQueryObserverOptions,
     InfiniteQueryObserverResult,
     QueryFunctionContext,
@@ -12,63 +14,64 @@ import type {
     DataSourceKey,
     DataSourceOptions,
     DataSourceParams,
-    DataSourceRequest,
     DataSourceResponse,
     DataSourceState,
 } from '../../../core';
 import {normalizeStatus} from '../../utils/normalizeStatus';
 
-import type {AnyInfiniteQueryDataSource} from './types';
+import type {AnyInfiniteQueryDataSource, AnyPageParam} from './types';
 
 const EMPTY_ARRAY: unknown[] = [];
+const EMPTY_OBJECT = {};
 
 export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
     context: DataSourceContext<TDataSource>,
     dataSource: TDataSource,
     params: DataSourceParams<TDataSource>,
-    options?: DataSourceOptions<TDataSource>,
+    options?: Partial<DataSourceOptions<TDataSource>>,
 ): InfiniteQueryObserverOptions<
     DataSourceResponse<TDataSource>,
     DataSourceError<TDataSource>,
-    DataSourceData<TDataSource>,
-    DataSourceResponse<TDataSource>
+    InfiniteData<DataSourceData<TDataSource>, AnyPageParam>,
+    DataSourceResponse<TDataSource>,
+    DataSourceKey,
+    AnyPageParam
 > => {
     const {transformParams, transformResponse, next, prev} = dataSource;
 
-    return {
-        ...dataSource.options,
-        enabled: params !== idle,
-        queryKey: composeFullKey(dataSource, params),
-        queryFn: (
-            fetchContext: QueryFunctionContext<
-                DataSourceKey,
-                Partial<DataSourceRequest<TDataSource>> | undefined
-            >,
-        ) => {
-            const actualParams = transformParams ? transformParams(params) : params;
-            const request =
-                typeof actualParams === 'object'
-                    ? {...actualParams, ...fetchContext.pageParam}
-                    : actualParams;
+    const queryFn = (
+        fetchContext: QueryFunctionContext<DataSourceKey, AnyPageParam>,
+    ): DataSourceResponse<TDataSource> | Promise<DataSourceResponse<TDataSource>> => {
+        const request = transformParams ? transformParams(params) : params;
+        const paginatedRequest = {...request, ...fetchContext.pageParam};
 
-            return dataSource.fetch(context, fetchContext, request);
-        },
+        return dataSource.fetch(context, fetchContext, paginatedRequest);
+    };
+
+    return {
+        queryKey: composeFullKey(dataSource, params),
+        queryFn: params === idle ? skipToken : queryFn,
         select: transformResponse
             ? (data) => ({...data, pages: data.pages.map(transformResponse)})
             : undefined,
+        initialPageParam: EMPTY_OBJECT,
         getNextPageParam: next,
         getPreviousPageParam: prev,
+        ...dataSource.options,
         ...options,
     };
 };
 
 export const transformResult = <TDataSource extends AnyInfiniteQueryDataSource>(
-    result: InfiniteQueryObserverResult<DataSourceData<TDataSource>, DataSourceError<TDataSource>>,
-) => {
+    result: InfiniteQueryObserverResult<
+        InfiniteData<DataSourceData<TDataSource>, AnyPageParam>,
+        DataSourceError<TDataSource>
+    >,
+): DataSourceState<TDataSource> => {
     return {
         ...result,
         status: normalizeStatus(result.status, result.fetchStatus),
-        data: result.data?.pages.flat() ?? EMPTY_ARRAY,
+        data: result.data?.pages.flat(1) ?? EMPTY_ARRAY,
         originalStatus: result.status,
         originalData: result.data,
     } as DataSourceState<TDataSource>;
