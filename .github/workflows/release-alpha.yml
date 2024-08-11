@@ -15,7 +15,7 @@ on:
       version:
         type: string
         required: false
-        description: If your build failed and the version is already exists you can set version of package manually, e.g. `3.0.0-alpha.0``. Use the prefix `alpha` otherwise you will get error.
+        description: If your build failed and the version is already exists you can set version of package manually, e.g. `3.0.0-alpha.0`. Use the prefix `alpha` otherwise you will get error.
 
 jobs:
   release:
