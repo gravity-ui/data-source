@@ -1,0 +1,32 @@
+name: Release Alpha
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        type: choice
+        description: Release type, `prerelase` is used by default
+        options:
+          - prerelease
+          - prepatch
+          - preminor
+          - premajor
+        default: prerelease
+      version:
+        type: string
+        required: false
+        description: If your build failed and the version is already exists you can set version of package manually, e.g. `3.0.0-alpha.0``. Use the prefix `alpha` otherwise you will get error.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Alpha from ${{ github.ref_name }}
+        uses: gravity-ui/release-action@v1
+        with:
+          github-token: ${{ secrets.GRAVITY_UI_BOT_GITHUB_TOKEN }}
+          npm-token: ${{ secrets.GRAVITY_UI_BOT_NPM_TOKEN }}
+          node-version: 18
+          npm-version: ${{ github.event.inputs.version || github.event.inputs.type }}
+          npm-dist-tag: alpha
+          npm-preid: alpha
