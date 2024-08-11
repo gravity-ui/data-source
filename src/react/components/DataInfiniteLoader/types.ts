@@ -10,7 +10,7 @@ export interface MoreViewProps {
 
 export interface DataInfiniteLoaderProps<
     TError,
-    TLoadingViewProps extends {} = {},
+    TLoadingViewProps extends object = {},
     TErrorViewProps extends ErrorViewProps<TError> = ErrorViewProps<TError>,
     TMoreViewProps extends MoreViewProps = MoreViewProps,
 > {
