@@ -6,7 +6,11 @@ export const normalizeStatus = (
     status: QueryStatus,
     fetchStatus: FetchStatus,
 ): DataLoaderStatus => {
-    if (status === 'loading' && fetchStatus === 'idle') {
+    if (status === 'pending') {
+        if (fetchStatus === 'fetching') {
+            return 'loading';
+        }
+
         return 'success';
     }
 
