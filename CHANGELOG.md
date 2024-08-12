@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/gravity-ui/data-source/compare/v0.2.1...v0.3.0) (2024-08-12)
+
+
+### Features
+
+* **react-query:** update to major v5 ([#13](https://github.com/gravity-ui/data-source/issues/13)) ([9e6b893](https://github.com/gravity-ui/data-source/commit/9e6b89318ce26071321e37eb720890749a3031f6))
+
 ## [0.2.1](https://github.com/gravity-ui/data-source/compare/v0.2.0...v0.2.1) (2024-08-07)
 
 
