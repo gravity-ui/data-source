@@ -5,7 +5,7 @@ import type {ErrorAction, ErrorViewProps} from '../types';
 
 export interface DataLoaderProps<
     TError,
-    TLoadingViewProps extends {} = {},
+    TLoadingViewProps extends object = {},
     TErrorViewProps extends ErrorViewProps<TError> = ErrorViewProps<TError>,
 > {
     status: DataLoaderStatus;
