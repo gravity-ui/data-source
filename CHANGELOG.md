@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/gravity-ui/data-source/compare/v0.3.0...v0.4.0) (2024-08-19)
+
+
+### Features
+
+* **react-query:** add memoization for data in infinite source ([#17](https://github.com/gravity-ui/data-source/issues/17)) ([1147af1](https://github.com/gravity-ui/data-source/commit/1147af1526f3969c894128cfc83694a690582a5b))
+
 ## [0.3.0](https://github.com/gravity-ui/data-source/compare/v0.2.1...v0.3.0) (2024-08-12)
 
 
