@@ -2,7 +2,6 @@ import {skipToken} from '@tanstack/react-query';
 import type {
     InfiniteData,
     InfiniteQueryObserverOptions,
-    InfiniteQueryObserverResult,
     QueryFunctionContext,
 } from '@tanstack/react-query';
 
@@ -15,13 +14,10 @@ import type {
     DataSourceOptions,
     DataSourceParams,
     DataSourceResponse,
-    DataSourceState,
 } from '../../../core';
-import {normalizeStatus} from '../../utils/normalizeStatus';
 
 import type {AnyInfiniteQueryDataSource, AnyPageParam} from './types';
 
-const EMPTY_ARRAY: unknown[] = [];
 const EMPTY_OBJECT = {};
 
 export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
@@ -60,19 +56,4 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
         ...dataSource.options,
         ...options,
     };
-};
-
-export const transformResult = <TDataSource extends AnyInfiniteQueryDataSource>(
-    result: InfiniteQueryObserverResult<
-        InfiniteData<DataSourceData<TDataSource>, AnyPageParam>,
-        DataSourceError<TDataSource>
-    >,
-): DataSourceState<TDataSource> => {
-    return {
-        ...result,
-        status: normalizeStatus(result.status, result.fetchStatus),
-        data: result.data?.pages.flat(1) ?? EMPTY_ARRAY,
-        originalStatus: result.status,
-        originalData: result.data,
-    } as DataSourceState<TDataSource>;
 };
