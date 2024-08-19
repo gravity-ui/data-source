@@ -1,7 +1,6 @@
 import {
     type QueryFunctionContext,
     type QueryObserverOptions,
-    type QueryObserverResult,
     skipToken,
 } from '@tanstack/react-query';
 
@@ -14,9 +13,7 @@ import type {
     DataSourceOptions,
     DataSourceParams,
     DataSourceResponse,
-    DataSourceState,
 } from '../../../core';
-import {normalizeStatus} from '../../utils/normalizeStatus';
 
 import type {AnyPlainQueryDataSource} from './types';
 
@@ -51,14 +48,4 @@ export const composeOptions = <TDataSource extends AnyPlainQueryDataSource>(
         ...dataSource.options,
         ...options,
     };
-};
-
-export const transformResult = <TDataSource extends AnyPlainQueryDataSource>(
-    result: QueryObserverResult<DataSourceData<TDataSource>, DataSourceError<TDataSource>>,
-): DataSourceState<TDataSource> => {
-    return {
-        ...result,
-        status: normalizeStatus(result.status, result.fetchStatus),
-        originalStatus: result.status,
-    } as DataSourceState<TDataSource>;
 };

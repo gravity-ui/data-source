@@ -6,9 +6,10 @@ import type {
     DataSourceParams,
     DataSourceState,
 } from '../../../core';
+import {normalizeStatus} from '../../utils/normalizeStatus';
 
 import type {AnyPlainQueryDataSource} from './types';
-import {composeOptions, transformResult} from './utils';
+import {composeOptions} from './utils';
 
 export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
     context: DataSourceContext<TDataSource>,
@@ -19,5 +20,9 @@ export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
     const composedOptions = composeOptions(context, dataSource, params, options);
     const result = useQuery(composedOptions);
 
-    return transformResult(result);
+    return {
+        ...result,
+        status: normalizeStatus(result.status, result.fetchStatus),
+        originalStatus: result.status,
+    } as DataSourceState<TDataSource>;
 };
