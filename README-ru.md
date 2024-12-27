@@ -1,6 +1,6 @@
 # Data Source &middot; [![npm version](https://img.shields.io/npm/v/@gravity-ui/data-source?logo=npm&label=version)](https://www.npmjs.com/package/@gravity-ui/data-source) [![ci](https://img.shields.io/github/actions/workflow/status/gravity-ui/data-source/ci.yml?branch=main&label=ci&logo=github)](https://github.com/gravity-ui/data-source/actions/workflows/ci.yml?query=branch:main)
 
-`Data Source` — это простой оберточный компонент для извлечения данных. В рамках [чистой архитектуры](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) он выполняет роль порта, позволяя создавать обертки для различных сценариев работы с данными. `Data Source` в своей основе использует [`react-query`](https://tanstack.com/query/latest).
+`Data Source` — это простой оберточный компонент для фетчинга данных. В рамках [чистой архитектуры](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) он выполняет роль порта, позволяя создавать обертки для различных сценариев работы с данными. `Data Source` в своей основе использует [`react-query`](https://tanstack.com/query/latest).
 
 ## Установка
 
