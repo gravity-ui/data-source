@@ -1,4 +1,4 @@
-import type {QueryClientConfig} from '@tanstack/react-query';
+import type {InvalidateQueryFilters, QueryClientConfig} from '@tanstack/react-query';
 import {QueryClient} from '@tanstack/react-query';
 
 import {
@@ -9,6 +9,7 @@ import {
     composeFullKey,
     hasTag,
 } from '../core';
+import type {InvalidateDataOptions, RepeatOptions, RepeatProp} from '../core/types/DataManger';
 
 export type ClientDataManagerConfig = QueryClientConfig;
 
@@ -32,23 +33,35 @@ export class ClientDataManager implements DataManager {
         });
     }
 
-    invalidateTag(tag: DataSourceTag) {
-        return this.queryClient.invalidateQueries({
-            predicate: ({queryKey}) => hasTag(queryKey, tag),
-        });
+    invalidateTag(tag: DataSourceTag, invalidateOptions?: InvalidateDataOptions) {
+        return this.invalidateQueries(
+            {
+                predicate: ({queryKey}) => hasTag(queryKey, tag),
+            },
+            invalidateOptions,
+        );
     }
 
-    invalidateTags(tags: DataSourceTag[]) {
-        return this.queryClient.invalidateQueries({
-            predicate: ({queryKey}) => tags.every((tag) => hasTag(queryKey, tag)),
-        });
+    invalidateTags(tags: DataSourceTag[], invalidateOptions?: InvalidateDataOptions) {
+        return this.invalidateQueries(
+            {
+                predicate: ({queryKey}) => tags.every((tag) => hasTag(queryKey, tag)),
+            },
+            invalidateOptions,
+        );
     }
 
-    invalidateSource<TDataSource extends AnyDataSource>(dataSource: TDataSource) {
-        return this.queryClient.invalidateQueries({
-            // First element is a data source name
-            queryKey: [dataSource.name],
-        });
+    invalidateSource<TDataSource extends AnyDataSource>(
+        dataSource: TDataSource,
+        invalidateOptions?: InvalidateDataOptions,
+    ) {
+        return this.invalidateQueries(
+            {
+                // First element is a data source name
+                queryKey: [dataSource.name],
+            },
+            invalidateOptions,
+        );
     }
 
     resetSource<TDataSource extends AnyDataSource>(dataSource: TDataSource) {
@@ -61,11 +74,15 @@ export class ClientDataManager implements DataManager {
     invalidateParams<TDataSource extends AnyDataSource>(
         dataSource: TDataSource,
         params: DataSourceParams<TDataSource>,
+        invalidateOptions?: InvalidateDataOptions,
     ) {
-        return this.queryClient.invalidateQueries({
-            queryKey: composeFullKey(dataSource, params),
-            exact: true,
-        });
+        return this.invalidateQueries(
+            {
+                queryKey: composeFullKey(dataSource, params),
+                exact: true,
+            },
+            invalidateOptions,
+        );
     }
 
     resetParams<TDataSource extends AnyDataSource>(
@@ -81,10 +98,53 @@ export class ClientDataManager implements DataManager {
     invalidateSourceTags<TDataSource extends AnyDataSource>(
         dataSource: TDataSource,
         params: DataSourceParams<TDataSource>,
+        invalidateOptions?: InvalidateDataOptions,
     ) {
-        return this.queryClient.invalidateQueries({
-            // Last element is a full key
-            queryKey: composeFullKey(dataSource, params).slice(0, -1),
-        });
+        return this.invalidateQueries(
+            {
+                // Last element is a full key
+                queryKey: composeFullKey(dataSource, params).slice(0, -1),
+            },
+            invalidateOptions,
+        );
+    }
+
+    private invalidateQueries(
+        filters?: InvalidateQueryFilters,
+        invalidateOptions?: InvalidateDataOptions,
+    ) {
+        const {repeat, ...options} = invalidateOptions || {};
+
+        const invalidate = () => this.queryClient.invalidateQueries(filters, options);
+
+        this.repeatInvalidate(invalidate, repeat);
+
+        return invalidate();
+    }
+
+    private repeatInvalidate(invalidate: () => Promise<void>, repeat?: RepeatProp) {
+        if (!repeat) {
+            return;
+        }
+
+        if (typeof repeat === 'function') {
+            repeat(invalidate);
+        } else {
+            this.defaultRepeat(invalidate, repeat);
+        }
+    }
+
+    private defaultRepeat(
+        callback: () => Promise<void>,
+        options: RepeatOptions,
+    ): () => Promise<void> {
+        const {repeatInterval, count = 2} = options;
+
+        return () => {
+            for (let i = 1; i <= count; i++) {
+                setTimeout(callback, repeatInterval * i);
+            }
+            return callback();
+        };
     }
 }
