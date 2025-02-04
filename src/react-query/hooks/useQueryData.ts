@@ -2,17 +2,20 @@ import type {DataSourceOptions, DataSourceParams, DataSourceState} from '../../c
 import {useInfiniteQueryData} from '../impl/infinite/hooks';
 import type {AnyInfiniteQueryDataSource} from '../impl/infinite/types';
 import {usePlainQueryData} from '../impl/plain/hooks';
-import type {AnyQueryDataSource} from '../types';
+import type {AnyQueryDataSource, QueryDataOptions} from '../types';
 import {notReachable} from '../utils/notReachable';
 
 import {useQueryContext} from './useQueryContext';
+import {useQueryDataOptions} from './useQueryDataOptions';
 
 export const useQueryData = <TDataSource extends AnyQueryDataSource>(
     dataSource: TDataSource,
     params: DataSourceParams<TDataSource>,
-    options?: Partial<DataSourceOptions<TDataSource>>,
+    extendedOptions?: Partial<QueryDataOptions<TDataSource>>,
 ): DataSourceState<TDataSource> => {
     const context = useQueryContext();
+
+    const options = useQueryDataOptions(extendedOptions);
 
     const type = dataSource.type;
     let state: DataSourceState<AnyQueryDataSource> | undefined;
