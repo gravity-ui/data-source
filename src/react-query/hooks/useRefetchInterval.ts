@@ -5,7 +5,8 @@ import type {BaseRefetchInterval, ProgressiveRefetchInterval, RefetchInterval} f
 export const useRefetchInterval = (
     refetchIntervalOption?: RefetchInterval,
 ): BaseRefetchInterval => {
-    const {minInterval = 0, maxInterval = 0} = refetchIntervalOption as ProgressiveRefetchInterval;
+    const minInterval = (refetchIntervalOption as ProgressiveRefetchInterval)?.minInterval || 0;
+    const maxInterval = (refetchIntervalOption as ProgressiveRefetchInterval)?.maxInterval || 0;
     const [refetchInterval, setRefetchInterval] = React.useState(minInterval);
     const [lastTick, setLastTick] = React.useState(Date.now());
 

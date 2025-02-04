@@ -134,17 +134,11 @@ export class ClientDataManager implements DataManager {
         }
     }
 
-    private defaultRepeat(
-        callback: () => Promise<void>,
-        options: RepeatOptions,
-    ): () => Promise<void> {
+    private defaultRepeat(callback: () => Promise<void>, options: RepeatOptions) {
         const {repeatInterval, count = 2} = options;
 
-        return () => {
-            for (let i = 1; i <= count; i++) {
-                setTimeout(callback, repeatInterval * i);
-            }
-            return callback();
-        };
+        for (let i = 1; i <= count; i++) {
+            setTimeout(callback, repeatInterval * i);
+        }
     }
 }
