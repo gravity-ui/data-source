@@ -18,5 +18,6 @@ export type QueryDataOptions<TDataSource extends AnyQueryDataSource> = Omit<
     refetchInterval?:
         | number
         | false
-        | ((query: Query, count: number) => number | false | undefined);
+        | ((query: Query, count: number) => number | false | undefined)
+        | ((query: Query) => number | false | undefined);
 };
