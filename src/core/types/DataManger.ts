@@ -1,23 +1,5 @@
-import type {InvalidateOptions} from '@tanstack/react-query';
-
+import type {InvalidateDataOptions} from './DataManagerOptions';
 import type {AnyDataSource, DataSourceParams, DataSourceTag} from './DataSource';
-
-export type RepeatOptions = {
-    repeatInterval: number;
-    /**
-     * Number of repeated calls, not counting the first one
-     * @default 2
-     */
-    count?: number;
-};
-
-export type RepeatFunction = (invalidateCallback: () => Promise<void>) => Promise<void>;
-
-export type RepeatProp = RepeatOptions | RepeatFunction;
-
-export type InvalidateDataOptions = InvalidateOptions & {
-    repeat?: RepeatProp;
-};
 
 export interface DataManager {
     invalidateTag(tag: DataSourceTag, invalidateOptions?: InvalidateDataOptions): Promise<void>;

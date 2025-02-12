@@ -1,30 +1,20 @@
 import React from 'react';
 
-import type {BaseRefetchInterval, ProgressiveRefetchInterval, RefetchInterval} from '../types';
+import type {Query} from '@tanstack/react-query';
 
-export const useRefetchInterval = (
-    refetchIntervalOption?: RefetchInterval,
-): BaseRefetchInterval => {
-    const minInterval = (refetchIntervalOption as ProgressiveRefetchInterval)?.minInterval || 0;
-    const maxInterval = (refetchIntervalOption as ProgressiveRefetchInterval)?.maxInterval || 0;
-    const [refetchInterval, setRefetchInterval] = React.useState(minInterval);
-    const [lastTick, setLastTick] = React.useState(Date.now());
+import type {RefetchInterval} from '../../core/types/RefetchInterval';
 
-    const next = React.useCallback(() => {
-        if (refetchInterval < maxInterval && Date.now() - lastTick > refetchInterval) {
-            setRefetchInterval(Math.min(refetchInterval * 2, maxInterval));
-            setLastTick(Date.now());
-        }
-        return refetchInterval;
-    }, [refetchInterval, maxInterval, lastTick]);
+export const useRefetchInterval = (refetchIntervalOption?: RefetchInterval) => {
+    const count = React.useRef<number | undefined>(undefined);
 
-    if (!isProgressiveRefetchInterval(refetchIntervalOption)) {
-        return refetchIntervalOption as BaseRefetchInterval;
+    if (typeof refetchIntervalOption === 'function') {
+        return (query: Query) => {
+            if (count.current === undefined) {
+                count.current = query.state.dataUpdateCount;
+            }
+            return refetchIntervalOption(query, query.state.dataUpdateCount - count.current);
+        };
     }
 
-    return next;
+    return refetchIntervalOption;
 };
-
-function isProgressiveRefetchInterval(refetchInterval?: RefetchInterval) {
-    return typeof refetchInterval === 'object';
-}

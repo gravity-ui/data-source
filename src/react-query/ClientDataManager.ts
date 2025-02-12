@@ -9,7 +9,7 @@ import {
     composeFullKey,
     hasTag,
 } from '../core';
-import type {InvalidateDataOptions, RepeatOptions, RepeatProp} from '../core/types/DataManger';
+import type {InvalidateDataOptions, RepeatOptions} from '../core/types/DataManagerOptions';
 
 export type ClientDataManagerConfig = QueryClientConfig;
 
@@ -113,32 +113,23 @@ export class ClientDataManager implements DataManager {
         filters?: InvalidateQueryFilters,
         invalidateOptions?: InvalidateDataOptions,
     ) {
-        const {repeat, ...options} = invalidateOptions || {};
+        const {repeat} = invalidateOptions || {};
 
-        const invalidate = () => this.queryClient.invalidateQueries(filters, options);
+        const invalidate = () => this.queryClient.invalidateQueries(filters);
 
         this.repeatInvalidate(invalidate, repeat);
 
         return invalidate();
     }
 
-    private repeatInvalidate(invalidate: () => Promise<void>, repeat?: RepeatProp) {
+    private repeatInvalidate(invalidate: () => Promise<void>, repeat?: RepeatOptions) {
         if (!repeat) {
             return;
         }
-
-        if (typeof repeat === 'function') {
-            repeat(invalidate);
-        } else {
-            this.defaultRepeat(invalidate, repeat);
-        }
-    }
-
-    private defaultRepeat(callback: () => Promise<void>, options: RepeatOptions) {
-        const {repeatInterval, count = 2} = options;
+        const {repeatInterval, count} = repeat;
 
         for (let i = 1; i <= count; i++) {
-            setTimeout(callback, repeatInterval * i);
+            setTimeout(invalidate, repeatInterval * i);
         }
     }
 }

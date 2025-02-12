@@ -11,18 +11,12 @@ export interface QueryDataSourceContext {
 
 export type AnyQueryDataSource = AnyPlainQueryDataSource | AnyInfiniteQueryDataSource;
 
-export type BaseRefetchInterval = number | false | ((query: Query) => number | false | undefined);
-
-export type ProgressiveRefetchInterval = {
-    minInterval: number;
-    maxInterval: number;
-};
-
-export type RefetchInterval = BaseRefetchInterval | ProgressiveRefetchInterval;
-
 export type QueryDataOptions<TDataSource extends AnyQueryDataSource> = Omit<
     DataSourceOptions<TDataSource>,
     'refetchInterval'
 > & {
-    refetchInterval?: BaseRefetchInterval;
+    refetchInterval?:
+        | number
+        | false
+        | ((query: Query, count: number) => number | false | undefined);
 };

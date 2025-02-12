@@ -15,6 +15,7 @@ export {makePlainQueryDataSource} from './impl/plain/factory';
 export {composeOptions as composePlainQueryOptions} from './impl/plain/utils';
 
 export {normalizeStatus} from './utils/normalizeStatus';
+export {getProgressiveRefetch} from './utils/getProgressiveRefetch';
 
 export type {ClientDataManagerConfig} from './ClientDataManager';
 export {ClientDataManager} from './ClientDataManager';
