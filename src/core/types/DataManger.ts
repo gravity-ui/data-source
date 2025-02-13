@@ -1,13 +1,13 @@
-import type {InvalidateDataOptions} from './DataManagerOptions';
+import type {InvalidateOptions} from './DataManagerOptions';
 import type {AnyDataSource, DataSourceParams, DataSourceTag} from './DataSource';
 
 export interface DataManager {
-    invalidateTag(tag: DataSourceTag, invalidateOptions?: InvalidateDataOptions): Promise<void>;
-    invalidateTags(tags: DataSourceTag[], invalidateOptions?: InvalidateDataOptions): Promise<void>;
+    invalidateTag(tag: DataSourceTag, invalidateOptions?: InvalidateOptions): Promise<void>;
+    invalidateTags(tags: DataSourceTag[], invalidateOptions?: InvalidateOptions): Promise<void>;
 
     invalidateSource<TDataSource extends AnyDataSource>(
         dataSource: TDataSource,
-        invalidateOptions?: InvalidateDataOptions,
+        invalidateOptions?: InvalidateOptions,
     ): Promise<void>;
 
     resetSource<TDataSource extends AnyDataSource>(dataSource: TDataSource): Promise<void>;
@@ -15,7 +15,7 @@ export interface DataManager {
     invalidateParams<TDataSource extends AnyDataSource>(
         dataSource: TDataSource,
         params: DataSourceParams<TDataSource>,
-        invalidateOptions?: InvalidateDataOptions,
+        invalidateOptions?: InvalidateOptions,
     ): Promise<void>;
 
     resetParams<TDataSource extends AnyDataSource>(
@@ -26,6 +26,6 @@ export interface DataManager {
     invalidateSourceTags<TDataSource extends AnyDataSource>(
         dataSource: TDataSource,
         params: DataSourceParams<TDataSource>,
-        invalidateOptions?: InvalidateDataOptions,
+        invalidateOptions?: InvalidateOptions,
     ): Promise<void>;
 }

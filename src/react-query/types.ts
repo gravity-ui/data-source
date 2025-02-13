@@ -1,4 +1,10 @@
-import type {Query, QueryClient} from '@tanstack/react-query';
+import type {
+    DefaultError,
+    Query,
+    QueryClient,
+    QueryKey,
+    QueryObserverOptions as QueryObserverOptionsBase,
+} from '@tanstack/react-query';
 
 import type {DataSourceOptions} from '../core';
 
@@ -11,13 +17,33 @@ export interface QueryDataSourceContext {
 
 export type AnyQueryDataSource = AnyPlainQueryDataSource | AnyInfiniteQueryDataSource;
 
+export type FunctionRefetchInterval = (query: Query, count: number) => number | false | undefined;
+
+export type RefetchInterval = number | false | FunctionRefetchInterval;
+
+export type ProgressiveRefetchInterval = {
+    minInterval: number;
+    maxInterval: number;
+    count?: number;
+};
+
 export type QueryDataOptions<TDataSource extends AnyQueryDataSource> = Omit<
     DataSourceOptions<TDataSource>,
     'refetchInterval'
 > & {
-    refetchInterval?:
-        | number
-        | false
-        | ((query: Query, count: number) => number | false | undefined)
-        | ((query: Query) => number | false | undefined);
+    refetchInterval?: RefetchInterval;
 };
+
+export interface QueryObserverOptions<
+    TQueryFnData = unknown,
+    TError = DefaultError,
+    TData = TQueryFnData,
+    TQueryData = TQueryFnData,
+    TQueryKey extends QueryKey = QueryKey,
+    TPageParam = never,
+> extends Omit<
+        QueryObserverOptionsBase<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
+        'refetchInterval'
+    > {
+    refetchInterval?: RefetchInterval;
+}

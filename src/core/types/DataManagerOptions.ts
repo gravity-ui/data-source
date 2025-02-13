@@ -1,11 +1,11 @@
-export type RepeatOptions = {
-    repeatInterval: number;
+export interface InvalidateRepeatOptions {
+    interval: number;
     /**
      * Number of repeated calls, not counting the first one
      */
     count: number;
-};
+}
 
-export type InvalidateDataOptions = {
-    repeat?: RepeatOptions;
-};
+export interface InvalidateOptions {
+    repeat?: InvalidateRepeatOptions;
+}

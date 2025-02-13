@@ -1,7 +1,4 @@
-import type {
-    FunctionRefetchInterval,
-    ProgressiveRefetchInterval,
-} from '../../core/types/RefetchInterval';
+import type {FunctionRefetchInterval, ProgressiveRefetchInterval} from '../types';
 
 export const getProgressiveRefetch = ({
     minInterval,

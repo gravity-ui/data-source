@@ -2,18 +2,25 @@ import React from 'react';
 
 import type {Query} from '@tanstack/react-query';
 
-import type {RefetchInterval} from '../../core/types/RefetchInterval';
+import type {RefetchInterval} from '../types';
 
 export const useRefetchInterval = (refetchIntervalOption?: RefetchInterval) => {
     const count = React.useRef<number | undefined>(undefined);
 
-    if (typeof refetchIntervalOption === 'function') {
-        return (query: Query) => {
+    const functionRefetchInterval = React.useCallback(
+        (query: Query) => {
             if (count.current === undefined) {
                 count.current = query.state.dataUpdateCount;
             }
-            return refetchIntervalOption(query, query.state.dataUpdateCount - count.current);
-        };
+            return typeof refetchIntervalOption === 'function'
+                ? refetchIntervalOption(query, query.state.dataUpdateCount - count.current)
+                : undefined;
+        },
+        [refetchIntervalOption],
+    );
+
+    if (typeof refetchIntervalOption === 'function') {
+        return functionRefetchInterval;
     }
 
     return refetchIntervalOption;

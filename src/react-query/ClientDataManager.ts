@@ -9,7 +9,7 @@ import {
     composeFullKey,
     hasTag,
 } from '../core';
-import type {InvalidateDataOptions, RepeatOptions} from '../core/types/DataManagerOptions';
+import type {InvalidateOptions, InvalidateRepeatOptions} from '../core/types/DataManagerOptions';
 
 export type ClientDataManagerConfig = QueryClientConfig;
 
@@ -33,7 +33,7 @@ export class ClientDataManager implements DataManager {
         });
     }
 
-    invalidateTag(tag: DataSourceTag, invalidateOptions?: InvalidateDataOptions) {
+    invalidateTag(tag: DataSourceTag, invalidateOptions?: InvalidateOptions) {
         return this.invalidateQueries(
             {
                 predicate: ({queryKey}) => hasTag(queryKey, tag),
@@ -42,7 +42,7 @@ export class ClientDataManager implements DataManager {
         );
     }
 
-    invalidateTags(tags: DataSourceTag[], invalidateOptions?: InvalidateDataOptions) {
+    invalidateTags(tags: DataSourceTag[], invalidateOptions?: InvalidateOptions) {
         return this.invalidateQueries(
             {
                 predicate: ({queryKey}) => tags.every((tag) => hasTag(queryKey, tag)),
@@ -53,7 +53,7 @@ export class ClientDataManager implements DataManager {
 
     invalidateSource<TDataSource extends AnyDataSource>(
         dataSource: TDataSource,
-        invalidateOptions?: InvalidateDataOptions,
+        invalidateOptions?: InvalidateOptions,
     ) {
         return this.invalidateQueries(
             {
@@ -74,7 +74,7 @@ export class ClientDataManager implements DataManager {
     invalidateParams<TDataSource extends AnyDataSource>(
         dataSource: TDataSource,
         params: DataSourceParams<TDataSource>,
-        invalidateOptions?: InvalidateDataOptions,
+        invalidateOptions?: InvalidateOptions,
     ) {
         return this.invalidateQueries(
             {
@@ -98,7 +98,7 @@ export class ClientDataManager implements DataManager {
     invalidateSourceTags<TDataSource extends AnyDataSource>(
         dataSource: TDataSource,
         params: DataSourceParams<TDataSource>,
-        invalidateOptions?: InvalidateDataOptions,
+        invalidateOptions?: InvalidateOptions,
     ) {
         return this.invalidateQueries(
             {
@@ -110,8 +110,8 @@ export class ClientDataManager implements DataManager {
     }
 
     private invalidateQueries(
-        filters?: InvalidateQueryFilters,
-        invalidateOptions?: InvalidateDataOptions,
+        filters: InvalidateQueryFilters,
+        invalidateOptions?: InvalidateOptions,
     ) {
         const {repeat} = invalidateOptions || {};
 
@@ -122,14 +122,14 @@ export class ClientDataManager implements DataManager {
         return invalidate();
     }
 
-    private repeatInvalidate(invalidate: () => Promise<void>, repeat?: RepeatOptions) {
+    private repeatInvalidate(invalidate: () => Promise<void>, repeat?: InvalidateRepeatOptions) {
         if (!repeat) {
             return;
         }
-        const {repeatInterval, count} = repeat;
+        const {interval, count} = repeat;
 
         for (let i = 1; i <= count; i++) {
-            setTimeout(invalidate, repeatInterval * i);
+            setTimeout(invalidate, interval * i);
         }
     }
 }

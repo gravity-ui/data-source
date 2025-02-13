@@ -1,4 +1,9 @@
-export type {QueryDataSourceContext, AnyQueryDataSource, QueryDataOptions} from './types';
+export type {
+    QueryDataSourceContext,
+    AnyQueryDataSource,
+    QueryDataOptions,
+    QueryObserverOptions,
+} from './types';
 
 export {useQueryContext} from './hooks/useQueryContext';
 export {useQueryData} from './hooks/useQueryData';
