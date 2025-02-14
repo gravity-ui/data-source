@@ -1,48 +1,41 @@
 import React from 'react';
 
-import type {
-    DefaultError,
-    InfiniteData,
-    Query,
-    QueryFunction,
-    QueryFunctionContext,
-    QueryKey,
-    SkipToken,
-} from '@tanstack/react-query';
+import type {Query, QueryFunction, QueryFunctionContext, SkipToken} from '@tanstack/react-query';
 
-import type {RefetchInterval} from '../types';
+import type {DataSourceError, DataSourceKey, DataSourceResponse} from '../../core';
+import type {AnyQueryDataSource, RefetchInterval} from '../types';
 
-export const useRefetchInterval = <
-    TQueryFnData = unknown,
-    TError = DefaultError,
-    TQueryData = TQueryFnData,
-    TQueryKey extends QueryKey = QueryKey,
-    TPageParam = unknown,
->(
+export const useRefetchInterval = <TDataSource extends AnyQueryDataSource, TQueryData, TPageParams>(
     refetchIntervalOption?: RefetchInterval<
-        TQueryFnData,
-        TError,
+        DataSourceResponse<TDataSource>,
+        DataSourceError<TDataSource>,
         TQueryData,
-        TQueryKey,
-        TPageParam
+        DataSourceKey
     >,
-    queryFnOption?: QueryFunction<TQueryFnData, TQueryKey, TPageParam> | SkipToken,
+    queryFnOption?:
+        | QueryFunction<DataSourceResponse<TDataSource>, DataSourceKey, TPageParams>
+        | SkipToken,
 ): {
     refetchInterval?:
         | number
         | false
         | ((
-              query:
-                  | Query<TQueryFnData, TError, TQueryData, TQueryKey>
-                  | Query<TQueryFnData, TError, InfiniteData<TQueryData, TPageParam>, TQueryKey>,
+              query: Query<
+                  DataSourceResponse<TDataSource>,
+                  DataSourceError<TDataSource>,
+                  TQueryData,
+                  DataSourceKey
+              >,
           ) => number | false | undefined);
-    queryFn?: QueryFunction<TQueryFnData, TQueryKey, TPageParam> | SkipToken;
+    queryFn?:
+        | QueryFunction<DataSourceResponse<TDataSource>, DataSourceKey, TPageParams>
+        | SkipToken;
 } => {
     const count = React.useRef<number>(0);
 
     const queryFn = React.useMemo(() => {
         if (typeof queryFnOption === 'function') {
-            return (context: QueryFunctionContext<TQueryKey, TPageParam>) => {
+            return (context: QueryFunctionContext<DataSourceKey, TPageParams>) => {
                 count.current++;
                 return queryFnOption(context);
             };
@@ -53,9 +46,12 @@ export const useRefetchInterval = <
     const refetchInterval = React.useMemo(() => {
         if (typeof refetchIntervalOption === 'function') {
             return (
-                query:
-                    | Query<TQueryFnData, TError, TQueryData, TQueryKey>
-                    | Query<TQueryFnData, TError, InfiniteData<TQueryData, TPageParam>, TQueryKey>,
+                query: Query<
+                    DataSourceResponse<TDataSource>,
+                    DataSourceError<TDataSource>,
+                    TQueryData,
+                    DataSourceKey
+                >,
             ) => {
                 return refetchIntervalOption(query, count.current);
             };

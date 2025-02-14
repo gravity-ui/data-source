@@ -1,15 +1,12 @@
-import type {DefaultError, InfiniteData, Query, QueryKey} from '@tanstack/react-query';
+import type {DefaultError, Query, QueryKey} from '@tanstack/react-query';
 
 export type RefetchIntervalFunction<
     TQueryFnData = unknown,
     TError = DefaultError,
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
-    TPageParam = never,
 > = (
-    query:
-        | Query<TQueryFnData, TError, TQueryData, TQueryKey>
-        | Query<TQueryFnData, TError, InfiniteData<TQueryData, TPageParam>, TQueryKey>,
+    query: Query<TQueryFnData, TError, TQueryData, TQueryKey>,
     count: number,
 ) => number | false | undefined;
 
@@ -18,11 +15,7 @@ export type RefetchInterval<
     TError = DefaultError,
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
-    TPageParam = never,
-> =
-    | number
-    | false
-    | RefetchIntervalFunction<TQueryFnData, TError, TQueryData, TQueryKey, TPageParam>;
+> = number | false | RefetchIntervalFunction<TQueryFnData, TError, TQueryData, TQueryKey>;
 
 export interface ProgressiveRefetchInterval {
     minInterval: number;
@@ -34,7 +27,6 @@ export interface QueryDataExtendedOptions<
     TError = DefaultError,
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
-    TPageParam = never,
 > {
-    refetchInterval?: RefetchInterval<TQueryFnData, TError, TQueryData, TQueryKey, TPageParam>;
+    refetchInterval?: RefetchInterval<TQueryFnData, TError, TQueryData, TQueryKey>;
 }
