@@ -1,9 +1,5 @@
 import {skipToken} from '@tanstack/react-query';
-import type {
-    InfiniteData,
-    InfiniteQueryObserverOptions,
-    QueryFunctionContext,
-} from '@tanstack/react-query';
+import type {InfiniteData, QueryFunctionContext} from '@tanstack/react-query';
 
 import {composeFullKey, idle} from '../../../core';
 import type {
@@ -16,7 +12,11 @@ import type {
     DataSourceResponse,
 } from '../../../core';
 
-import type {AnyInfiniteQueryDataSource, AnyPageParam} from './types';
+import type {
+    AnyInfiniteQueryDataSource,
+    AnyPageParam,
+    InfiniteQueryObserverExtendedOptions,
+} from './types';
 
 const EMPTY_OBJECT = {};
 
@@ -25,7 +25,7 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
     dataSource: TDataSource,
     params: DataSourceParams<TDataSource>,
     options?: Partial<DataSourceOptions<TDataSource>>,
-): InfiniteQueryObserverOptions<
+): InfiniteQueryObserverExtendedOptions<
     DataSourceResponse<TDataSource>,
     DataSourceError<TDataSource>,
     InfiniteData<DataSourceData<TDataSource>, AnyPageParam>,

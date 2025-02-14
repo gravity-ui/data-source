@@ -1,27 +1,67 @@
 import React from 'react';
 
-import type {Query} from '@tanstack/react-query';
+import type {
+    DefaultError,
+    InfiniteData,
+    Query,
+    QueryFunction,
+    QueryFunctionContext,
+    QueryKey,
+    SkipToken,
+} from '@tanstack/react-query';
 
 import type {RefetchInterval} from '../types';
 
-export const useRefetchInterval = (refetchIntervalOption?: RefetchInterval) => {
-    const count = React.useRef<number | undefined>(undefined);
+export const useRefetchInterval = <
+    TQueryFnData = unknown,
+    TError = DefaultError,
+    TQueryData = TQueryFnData,
+    TQueryKey extends QueryKey = QueryKey,
+    TPageParam = unknown,
+>(
+    refetchIntervalOption?: RefetchInterval<
+        TQueryFnData,
+        TError,
+        TQueryData,
+        TQueryKey,
+        TPageParam
+    >,
+    queryFnOption?: QueryFunction<TQueryFnData, TQueryKey, TPageParam> | SkipToken,
+): {
+    refetchInterval?:
+        | number
+        | false
+        | ((
+              query:
+                  | Query<TQueryFnData, TError, TQueryData, TQueryKey>
+                  | Query<TQueryFnData, TError, InfiniteData<TQueryData, TPageParam>, TQueryKey>,
+          ) => number | false | undefined);
+    queryFn?: QueryFunction<TQueryFnData, TQueryKey, TPageParam> | SkipToken;
+} => {
+    const count = React.useRef<number>(0);
 
-    const functionRefetchInterval = React.useCallback(
-        (query: Query) => {
-            if (count.current === undefined) {
-                count.current = query.state.dataUpdateCount;
-            }
-            return typeof refetchIntervalOption === 'function'
-                ? refetchIntervalOption(query, query.state.dataUpdateCount - count.current)
-                : undefined;
-        },
-        [refetchIntervalOption],
-    );
+    const queryFn = React.useMemo(() => {
+        if (typeof queryFnOption === 'function') {
+            return (context: QueryFunctionContext<TQueryKey, TPageParam>) => {
+                count.current++;
+                return queryFnOption(context);
+            };
+        }
+        return undefined;
+    }, [queryFnOption]);
 
-    if (typeof refetchIntervalOption === 'function') {
-        return functionRefetchInterval;
-    }
+    const refetchInterval = React.useMemo(() => {
+        if (typeof refetchIntervalOption === 'function') {
+            return (
+                query:
+                    | Query<TQueryFnData, TError, TQueryData, TQueryKey>
+                    | Query<TQueryFnData, TError, InfiniteData<TQueryData, TPageParam>, TQueryKey>,
+            ) => {
+                return refetchIntervalOption(query, count.current);
+            };
+        }
+        return refetchIntervalOption;
+    }, [refetchIntervalOption]);
 
-    return refetchIntervalOption;
+    return {refetchInterval, queryFn};
 };

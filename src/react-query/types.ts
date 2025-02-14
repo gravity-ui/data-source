@@ -1,12 +1,4 @@
-import type {
-    DefaultError,
-    Query,
-    QueryClient,
-    QueryKey,
-    QueryObserverOptions as QueryObserverOptionsBase,
-} from '@tanstack/react-query';
-
-import type {DataSourceOptions} from '../core';
+import type {DefaultError, InfiniteData, Query, QueryClient, QueryKey} from '@tanstack/react-query';
 
 import type {AnyInfiniteQueryDataSource} from './impl/infinite/types';
 import type {AnyPlainQueryDataSource} from './impl/plain/types';
@@ -17,33 +9,41 @@ export interface QueryDataSourceContext {
 
 export type AnyQueryDataSource = AnyPlainQueryDataSource | AnyInfiniteQueryDataSource;
 
-export type FunctionRefetchInterval = (query: Query, count: number) => number | false | undefined;
-
-export type RefetchInterval = number | false | FunctionRefetchInterval;
-
-export type ProgressiveRefetchInterval = {
-    minInterval: number;
-    maxInterval: number;
-    count?: number;
-};
-
-export type QueryDataOptions<TDataSource extends AnyQueryDataSource> = Omit<
-    DataSourceOptions<TDataSource>,
-    'refetchInterval'
-> & {
-    refetchInterval?: RefetchInterval;
-};
-
-export interface QueryObserverOptions<
+export type RefetchIntervalFunction<
     TQueryFnData = unknown,
     TError = DefaultError,
-    TData = TQueryFnData,
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
     TPageParam = never,
-> extends Omit<
-        QueryObserverOptionsBase<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
-        'refetchInterval'
-    > {
-    refetchInterval?: RefetchInterval;
+> = (
+    query:
+        | Query<TQueryFnData, TError, TQueryData, TQueryKey>
+        | Query<TQueryFnData, TError, InfiniteData<TQueryData, TPageParam>, TQueryKey>,
+    count: number,
+) => number | false | undefined;
+
+export type RefetchInterval<
+    TQueryFnData = unknown,
+    TError = DefaultError,
+    TQueryData = TQueryFnData,
+    TQueryKey extends QueryKey = QueryKey,
+    TPageParam = never,
+> =
+    | number
+    | false
+    | RefetchIntervalFunction<TQueryFnData, TError, TQueryData, TQueryKey, TPageParam>;
+
+export interface ProgressiveRefetchInterval {
+    minInterval: number;
+    maxInterval: number;
+}
+
+export interface QueryDataExtendedOptions<
+    TQueryFnData = unknown,
+    TError = DefaultError,
+    TQueryData = TQueryFnData,
+    TQueryKey extends QueryKey = QueryKey,
+    TPageParam = never,
+> {
+    refetchInterval?: RefetchInterval<TQueryFnData, TError, TQueryData, TQueryKey, TPageParam>;
 }

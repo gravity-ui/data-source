@@ -1,13 +1,35 @@
 import type {
+    DefaultError,
     InfiniteData,
     InfiniteQueryObserverOptions,
     InfiniteQueryObserverResult,
     QueryFunctionContext,
+    QueryKey,
 } from '@tanstack/react-query';
 import type {Overwrite} from 'utility-types';
 
 import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
-import type {QueryDataSourceContext} from '../../types';
+import type {QueryDataExtendedOptions, QueryDataSourceContext} from '../../types';
+
+export interface InfiniteQueryObserverExtendedOptions<
+    TQueryFnData = unknown,
+    TError = DefaultError,
+    TData = TQueryFnData,
+    TQueryData = TQueryFnData,
+    TQueryKey extends QueryKey = QueryKey,
+    TPageParam = unknown,
+> extends Omit<
+            InfiniteQueryObserverOptions<
+                TQueryFnData,
+                TError,
+                TData,
+                TQueryData,
+                TQueryKey,
+                TPageParam
+            >,
+            'refetchInterval'
+        >,
+        QueryDataExtendedOptions<TQueryFnData, TError, TQueryData, TQueryKey, TPageParam> {}
 
 export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
     QueryDataSourceContext,
@@ -16,7 +38,7 @@ export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError>
     TResponse,
     TData,
     TError,
-    InfiniteQueryObserverOptions<
+    InfiniteQueryObserverExtendedOptions<
         TResponse,
         TError,
         InfiniteData<ActualData<TData, TResponse>, Partial<TRequest>>,

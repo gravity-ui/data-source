@@ -1,25 +1,19 @@
-import type {FunctionRefetchInterval, ProgressiveRefetchInterval} from '../types';
+import type {DefaultError, QueryKey} from '@tanstack/react-query';
 
-export const getProgressiveRefetch = ({
+import type {ProgressiveRefetchInterval, RefetchIntervalFunction} from '../types';
+
+const BASE = 2;
+
+export const getProgressiveRefetch = <
+    TQueryFnData = unknown,
+    TError = DefaultError,
+    TData = TQueryFnData,
+    TQueryKey extends QueryKey = QueryKey,
+>({
     minInterval,
     maxInterval,
-    count,
-}: ProgressiveRefetchInterval): FunctionRefetchInterval => {
-    const refetchCount = count ?? getRefetchCountToMaxInterval({minInterval, maxInterval});
-
+}: ProgressiveRefetchInterval): RefetchIntervalFunction<TQueryFnData, TError, TData, TQueryKey> => {
     return (_, queryRefetchCount) => {
-        if (queryRefetchCount > refetchCount) {
-            return maxInterval;
-        }
-
-        const grade = Math.min(queryRefetchCount, refetchCount);
-        return Math.min(minInterval * 2 ** grade, maxInterval);
+        return Math.min(minInterval * BASE ** queryRefetchCount, maxInterval);
     };
 };
-
-function getRefetchCountToMaxInterval({
-    minInterval,
-    maxInterval,
-}: ProgressiveRefetchInterval): number {
-    return Math.ceil(Math.log2(maxInterval / minInterval));
-}
