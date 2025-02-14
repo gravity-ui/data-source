@@ -1,13 +1,4 @@
-import type {DefaultError, InfiniteData, Query, QueryClient, QueryKey} from '@tanstack/react-query';
-
-import type {AnyInfiniteQueryDataSource} from './impl/infinite/types';
-import type {AnyPlainQueryDataSource} from './impl/plain/types';
-
-export interface QueryDataSourceContext {
-    queryClient: QueryClient;
-}
-
-export type AnyQueryDataSource = AnyPlainQueryDataSource | AnyInfiniteQueryDataSource;
+import type {DefaultError, InfiniteData, Query, QueryKey} from '@tanstack/react-query';
 
 export type RefetchIntervalFunction<
     TQueryFnData = unknown,
