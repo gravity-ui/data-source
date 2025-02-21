@@ -1,8 +1,4 @@
-import {
-    type QueryFunctionContext,
-    type QueryObserverOptions,
-    skipToken,
-} from '@tanstack/react-query';
+import {type QueryFunctionContext, skipToken} from '@tanstack/react-query';
 
 import {composeFullKey, idle} from '../../../core';
 import type {
@@ -15,14 +11,14 @@ import type {
     DataSourceResponse,
 } from '../../../core';
 
-import type {AnyPlainQueryDataSource} from './types';
+import type {AnyPlainQueryDataSource, QueryObserverExtendedOptions} from './types';
 
 export const composeOptions = <TDataSource extends AnyPlainQueryDataSource>(
     context: DataSourceContext<TDataSource>,
     dataSource: TDataSource,
     params: DataSourceParams<TDataSource>,
     options?: Partial<DataSourceOptions<TDataSource>>,
-): QueryObserverOptions<
+): QueryObserverExtendedOptions<
     DataSourceResponse<TDataSource>,
     DataSourceError<TDataSource>,
     DataSourceData<TDataSource>,

@@ -1,12 +1,27 @@
 import type {
+    DefaultError,
     QueryFunctionContext,
+    QueryKey,
     QueryObserverOptions,
     QueryObserverResult,
 } from '@tanstack/react-query';
 import type {Overwrite} from 'utility-types';
 
 import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
-import type {QueryDataSourceContext} from '../../types';
+import type {QueryDataExtendedOptions, QueryDataSourceContext} from '../../types';
+
+export type QueryObserverExtendedOptions<
+    TQueryFnData = unknown,
+    TError = DefaultError,
+    TData = TQueryFnData,
+    TQueryData = TQueryFnData,
+    TQueryKey extends QueryKey = QueryKey,
+    TPageParam = never,
+> = Omit<
+    QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
+    'refetchInterval'
+> &
+    QueryDataExtendedOptions<TQueryFnData, TError, TQueryData, TQueryKey>;
 
 export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
     QueryDataSourceContext,
@@ -15,7 +30,13 @@ export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError> = 
     TResponse,
     TData,
     TError,
-    QueryObserverOptions<TResponse, TError, ActualData<TData, TResponse>, TResponse, DataSourceKey>,
+    QueryObserverExtendedOptions<
+        TResponse,
+        TError,
+        ActualData<TData, TResponse>,
+        TResponse,
+        DataSourceKey
+    >,
     ResultWrapper<
         QueryObserverResult<ActualData<TData, TResponse>, TError>,
         TResponse,

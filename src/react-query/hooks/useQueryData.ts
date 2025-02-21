@@ -2,6 +2,7 @@ import type {DataSourceOptions, DataSourceParams, DataSourceState} from '../../c
 import {useInfiniteQueryData} from '../impl/infinite/hooks';
 import type {AnyInfiniteQueryDataSource} from '../impl/infinite/types';
 import {usePlainQueryData} from '../impl/plain/hooks';
+import type {AnyPlainQueryDataSource} from '../impl/plain/types';
 import type {AnyQueryDataSource} from '../types';
 import {notReachable} from '../utils/notReachable';
 
@@ -20,7 +21,12 @@ export const useQueryData = <TDataSource extends AnyQueryDataSource>(
     // Do not change data source type in the same hook call
     if (type === 'plain') {
         // eslint-disable-next-line react-hooks/rules-of-hooks
-        state = usePlainQueryData(context, dataSource, params, options);
+        state = usePlainQueryData(
+            context,
+            dataSource,
+            params,
+            options as Partial<DataSourceOptions<AnyPlainQueryDataSource>> | undefined,
+        );
     } else if (type === 'infinite') {
         // eslint-disable-next-line react-hooks/rules-of-hooks
         state = useInfiniteQueryData(

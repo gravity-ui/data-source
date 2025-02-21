@@ -1,4 +1,10 @@
-export type {QueryDataSourceContext, AnyQueryDataSource} from './types';
+export type {
+    QueryDataSourceContext,
+    AnyQueryDataSource,
+    ProgressiveRefetchInterval,
+    RefetchInterval,
+    RefetchIntervalFunction,
+} from './types';
 
 export {useQueryContext} from './hooks/useQueryContext';
 export {useQueryData} from './hooks/useQueryData';
@@ -15,6 +21,7 @@ export {makePlainQueryDataSource} from './impl/plain/factory';
 export {composeOptions as composePlainQueryOptions} from './impl/plain/utils';
 
 export {normalizeStatus} from './utils/normalizeStatus';
+export {getProgressiveRefetch} from './utils/getProgressiveRefetch';
 
 export type {ClientDataManagerConfig} from './ClientDataManager';
 export {ClientDataManager} from './ClientDataManager';

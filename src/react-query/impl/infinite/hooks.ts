@@ -1,16 +1,26 @@
 import {useMemo} from 'react';
 
 import {useInfiniteQuery} from '@tanstack/react-query';
+import type {InfiniteData, InfiniteQueryObserverOptions} from '@tanstack/react-query';
 
 import type {
     DataSourceContext,
+    DataSourceData,
+    DataSourceError,
+    DataSourceKey,
     DataSourceOptions,
     DataSourceParams,
+    DataSourceResponse,
     DataSourceState,
 } from '../../../core';
+import {useRefetchInterval} from '../../hooks/useRefetchInterval';
 import {normalizeStatus} from '../../utils/normalizeStatus';
 
-import type {AnyInfiniteQueryDataSource} from './types';
+import type {
+    AnyInfiniteQueryDataSource,
+    AnyPageParam,
+    InfiniteQueryObserverExtendedOptions,
+} from './types';
 import {composeOptions} from './utils';
 
 export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSource>(
@@ -20,7 +30,10 @@ export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSou
     options?: Partial<DataSourceOptions<TDataSource>>,
 ): DataSourceState<TDataSource> => {
     const composedOptions = composeOptions(context, dataSource, params, options);
-    const result = useInfiniteQuery(composedOptions);
+
+    const extendedOptions = useInfiniteQueryDataOptions(composedOptions);
+
+    const result = useInfiniteQuery(extendedOptions);
 
     const transformedData = useMemo<DataSourceState<TDataSource>['data']>(
         () => result.data?.pages.flat(1) ?? [],
@@ -35,3 +48,31 @@ export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSou
         originalData: result.data,
     } as DataSourceState<TDataSource>;
 };
+
+export function useInfiniteQueryDataOptions<TDataSource extends AnyInfiniteQueryDataSource>(
+    composedOptions: InfiniteQueryObserverExtendedOptions<
+        DataSourceResponse<TDataSource>,
+        DataSourceError<TDataSource>,
+        InfiniteData<DataSourceData<TDataSource>, AnyPageParam>,
+        DataSourceResponse<TDataSource>,
+        DataSourceKey,
+        AnyPageParam
+    >,
+): InfiniteQueryObserverOptions<
+    DataSourceResponse<TDataSource>,
+    DataSourceError<TDataSource>,
+    InfiniteData<DataSourceData<TDataSource>, AnyPageParam>,
+    DataSourceResponse<TDataSource>,
+    DataSourceKey,
+    AnyPageParam
+> {
+    const {
+        refetchInterval: refetchIntervalOption,
+        queryFn: queryFnOption,
+        ...restOptions
+    } = composedOptions || {};
+
+    const {refetchInterval, queryFn} = useRefetchInterval(refetchIntervalOption, queryFnOption);
+
+    return {...restOptions, refetchInterval, queryFn};
+}
