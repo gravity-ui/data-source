@@ -27,13 +27,13 @@ export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSou
     context: DataSourceContext<TDataSource>,
     dataSource: TDataSource,
     params: DataSourceParams<TDataSource>,
-    extendedOptions?: Partial<DataSourceOptions<TDataSource>>,
+    options?: Partial<DataSourceOptions<TDataSource>>,
 ): DataSourceState<TDataSource> => {
-    const composedOptions = composeOptions(context, dataSource, params, extendedOptions);
+    const composedOptions = composeOptions(context, dataSource, params, options);
 
-    const options = useInfiniteQueryDataOptions(composedOptions);
+    const extendedOptions = useInfiniteQueryDataOptions(composedOptions);
 
-    const result = useInfiniteQuery(options);
+    const result = useInfiniteQuery(extendedOptions);
 
     const transformedData = useMemo<DataSourceState<TDataSource>['data']>(
         () => result.data?.pages.flat(1) ?? [],

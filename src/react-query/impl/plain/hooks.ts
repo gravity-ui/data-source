@@ -21,13 +21,13 @@ export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
     context: DataSourceContext<TDataSource>,
     dataSource: TDataSource,
     params: DataSourceParams<TDataSource>,
-    extendedOptions?: Partial<DataSourceOptions<TDataSource>>,
+    options?: Partial<DataSourceOptions<TDataSource>>,
 ): DataSourceState<TDataSource> => {
-    const composedOptions = composeOptions(context, dataSource, params, extendedOptions);
+    const composedOptions = composeOptions(context, dataSource, params, options);
 
-    const options = useQueryDataOptions(composedOptions);
+    const extendedOptions = useQueryDataOptions(composedOptions);
 
-    const result = useQuery(options);
+    const result = useQuery(extendedOptions);
 
     return {
         ...result,

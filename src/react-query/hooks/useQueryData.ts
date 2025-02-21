@@ -25,7 +25,7 @@ export const useQueryData = <TDataSource extends AnyQueryDataSource>(
             context,
             dataSource,
             params,
-            options as Partial<DataSourceOptions<AnyPlainQueryDataSource>>,
+            options as Partial<DataSourceOptions<AnyPlainQueryDataSource>> | undefined,
         );
     } else if (type === 'infinite') {
         // eslint-disable-next-line react-hooks/rules-of-hooks
