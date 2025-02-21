@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/gravity-ui/data-source/compare/v0.4.0...v0.5.0) (2025-02-21)
+
+
+### Features
+
+* add progressive refetch interval and repeat invalidation ([#22](https://github.com/gravity-ui/data-source/issues/22)) ([c472fae](https://github.com/gravity-ui/data-source/commit/c472faed04ad70129a0ba5ce027fc079550c4e6f))
+
 ## [0.4.0](https://github.com/gravity-ui/data-source/compare/v0.3.0...v0.4.0) (2024-08-19)
 
 
