@@ -1,4 +1,10 @@
-export type {QueryDataSourceContext, AnyQueryDataSource} from './types';
+export type {
+    QueryDataSourceContext,
+    AnyQueryDataSource,
+    ProgressiveRefetchInterval,
+    RefetchInterval,
+    RefetchIntervalFunction,
+} from './types';
 
 export {useQueryContext} from './hooks/useQueryContext';
 export {useQueryData} from './hooks/useQueryData';

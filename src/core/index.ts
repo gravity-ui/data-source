@@ -17,6 +17,7 @@ export type {
 } from './types/DataSource';
 export type {DataManager} from './types/DataManger';
 export type {DataLoaderStatus} from './types/DataLoaderStatus';
+export type {InvalidateRepeatOptions, InvalidateOptions} from './types/DataManagerOptions';
 
 export {idle} from './constants';
 
