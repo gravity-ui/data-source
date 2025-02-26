@@ -8,7 +8,13 @@ import type {
 } from '@tanstack/react-query';
 import type {Overwrite} from 'utility-types';
 
-import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
+import type {
+    ActualData,
+    ActualResponse,
+    DataLoaderStatus,
+    DataSource,
+    DataSourceKey,
+} from '../../../core';
 import type {QueryDataSourceContext} from '../../types/base';
 import type {QueryDataAdditionalOptions} from '../../types/options';
 
@@ -29,55 +35,64 @@ export type InfiniteQueryObserverExtendedOptions<
     >
 >;
 
-export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
-    QueryDataSourceContext,
-    TParams,
-    TRequest,
-    TResponse,
-    TData,
-    TError,
-    InfiniteQueryObserverExtendedOptions<
-        TResponse,
-        TError,
-        InfiniteData<ActualData<TData, TResponse>, Partial<TRequest>>,
-        TResponse,
-        DataSourceKey,
-        Partial<TRequest>
-    >,
-    ResultWrapper<
-        InfiniteQueryObserverResult<
-            InfiniteData<ActualData<TData, TResponse>, Partial<TRequest>>,
-            TError
-        >,
+export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError, TErrorResponse> =
+    DataSource<
+        QueryDataSourceContext,
+        TParams,
         TRequest,
         TResponse,
         TData,
-        TError
-    >,
-    QueryFunctionContext<DataSourceKey, Partial<TRequest>>
-> & {
-    type: 'infinite';
-    next: (lastPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | null | undefined;
-    prev?: (firstPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | null | undefined;
-};
+        TError,
+        TErrorResponse,
+        InfiniteQueryObserverExtendedOptions<
+            ActualResponse<TResponse, TErrorResponse>,
+            TError,
+            InfiniteData<ActualData<TResponse, TErrorResponse, TData>, Partial<TRequest>>,
+            ActualResponse<TResponse, TErrorResponse>,
+            DataSourceKey,
+            Partial<TRequest>
+        >,
+        ResultWrapper<
+            InfiniteQueryObserverResult<
+                InfiniteData<ActualData<TResponse, TErrorResponse, TData>, Partial<TRequest>>,
+                TError
+            >,
+            TRequest,
+            TResponse,
+            TData,
+            TError,
+            TErrorResponse
+        >,
+        QueryFunctionContext<DataSourceKey, Partial<TRequest>>
+    > & {
+        type: 'infinite';
+        next: (
+            lastPage: ActualResponse<TResponse, TErrorResponse>,
+            allPages: ActualResponse<TResponse, TErrorResponse>[],
+        ) => Partial<TRequest> | null | undefined;
+        prev?: (
+            firstPage: ActualResponse<TResponse, TErrorResponse>,
+            allPages: ActualResponse<TResponse, TErrorResponse>[],
+        ) => Partial<TRequest> | null | undefined;
+    };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyInfiniteQueryDataSource = InfiniteQueryDataSource<any, any, any, any, any>;
+export type AnyInfiniteQueryDataSource = InfiniteQueryDataSource<any, any, any, any, any, any>;
 
 // It is used instead of `Partial<DataSourceRequest<TDataSource>>` because TS can't calculate type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyPageParam = Partial<any>;
 
-type ResultWrapper<TResult, TRequest, TResponse, TData, TError> =
+type ResultWrapper<TResult, TRequest, TResponse, TData, TError, TErrorResponse> =
     TResult extends InfiniteQueryObserverResult<
-        InfiniteData<ActualData<TData, TResponse>, Partial<TRequest>>,
+        InfiniteData<ActualData<TResponse, TErrorResponse, TData>, Partial<TRequest>>,
         TError
     >
         ? Overwrite<
               TResult,
               {
                   status: DataLoaderStatus;
-                  data: Array<FlatArray<Array<ActualData<TData, TResponse>>, 1>>;
+                  data: Array<FlatArray<Array<ActualData<TResponse, TErrorResponse, TData>>, 1>>;
               }
           > & {
               originalStatus: TResult['status'];

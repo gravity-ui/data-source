@@ -14,6 +14,7 @@ export type {
     DataSourceFetchContext,
     ActualParams,
     ActualData,
+    ActualResponse,
 } from './types/DataSource';
 export type {DataManager} from './types/DataManger';
 export type {DataLoaderStatus} from './types/DataLoaderStatus';

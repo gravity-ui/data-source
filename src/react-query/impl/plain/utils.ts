@@ -10,6 +10,7 @@ import type {
     DataSourceParams,
     DataSourceResponse,
 } from '../../../core';
+import {formatNullableValue, parseNullableValue} from '../utils';
 
 import type {AnyPlainQueryDataSource, QueryObserverExtendedOptions} from './types';
 
@@ -25,22 +26,36 @@ export const composeOptions = <TDataSource extends AnyPlainQueryDataSource>(
     DataSourceResponse<TDataSource>,
     DataSourceKey
 > => {
-    const {transformParams} = dataSource;
+    const {transformParams, transformError, transformResponse} = dataSource;
 
-    const queryFn = (
+    const queryFn = async (
         fetchContext: QueryFunctionContext<DataSourceKey>,
-    ): DataSourceResponse<TDataSource> | Promise<DataSourceResponse<TDataSource>> => {
-        return dataSource.fetch(
-            context,
-            fetchContext,
-            transformParams ? transformParams(params) : params,
-        );
+    ): Promise<DataSourceResponse<TDataSource>> => {
+        try {
+            const fetchResult = await dataSource.fetch(
+                context,
+                fetchContext,
+                transformParams ? transformParams(params) : params,
+            );
+
+            return formatNullableValue(fetchResult);
+        } catch (error) {
+            if (!transformError) throw error;
+
+            return formatNullableValue(transformError(error));
+        }
+    };
+
+    const innerTransform = (response: any): any => {
+        const actualResponse = parseNullableValue(response);
+
+        return transformResponse ? transformResponse(actualResponse) : actualResponse;
     };
 
     return {
         queryKey: composeFullKey(dataSource, params),
         queryFn: params === idle ? skipToken : queryFn,
-        select: dataSource.transformResponse,
+        select: innerTransform,
         ...dataSource.options,
         ...options,
     };
