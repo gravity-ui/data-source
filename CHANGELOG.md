@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/gravity-ui/data-source/compare/v0.5.0...v0.5.1) (2025-03-14)
+
+
+### Bug Fixes
+
+* **react-query:** fix queryFn for useRefetchInterval ([#25](https://github.com/gravity-ui/data-source/issues/25)) ([8ba00e6](https://github.com/gravity-ui/data-source/commit/8ba00e680e4227ac9b47ebba709a2678e39b2781))
+
 ## [0.5.0](https://github.com/gravity-ui/data-source/compare/v0.4.0...v0.5.0) (2025-02-21)
 
 
