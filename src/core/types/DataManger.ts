@@ -3,6 +3,7 @@ import type {AnyDataSource, DataSourceParams, DataSourceTag} from './DataSource'
 
 export interface DataManager {
     invalidateTag(tag: DataSourceTag, invalidateOptions?: InvalidateOptions): Promise<void>;
+
     invalidateTags(tags: DataSourceTag[], invalidateOptions?: InvalidateOptions): Promise<void>;
 
     invalidateSource<TDataSource extends AnyDataSource>(

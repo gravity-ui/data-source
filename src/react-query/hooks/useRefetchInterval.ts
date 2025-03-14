@@ -1,63 +1,69 @@
 import React from 'react';
 
-import type {Query, QueryFunction, QueryFunctionContext, SkipToken} from '@tanstack/react-query';
+import type {DefaultError, Query, QueryFunction, QueryKey, SkipToken} from '@tanstack/react-query';
 
-import type {DataSourceError, DataSourceKey, DataSourceResponse} from '../../core';
-import type {AnyQueryDataSource, RefetchInterval} from '../types';
+import type {RefetchInterval} from '../types/refetch-interval';
 
-export const useRefetchInterval = <TDataSource extends AnyQueryDataSource, TQueryData, TPageParams>(
-    refetchIntervalOption?: RefetchInterval<
-        DataSourceResponse<TDataSource>,
-        DataSourceError<TDataSource>,
-        TQueryData,
-        DataSourceKey
-    >,
-    queryFnOption?:
-        | QueryFunction<DataSourceResponse<TDataSource>, DataSourceKey, TPageParams>
-        | SkipToken,
-): {
+export interface UseRefetchIntervalResult<
+    TQueryFnData = unknown,
+    TError = DefaultError,
+    TQueryData = TQueryFnData,
+    TQueryKey extends QueryKey = QueryKey,
+    TPageParam = never,
+> {
     refetchInterval?:
         | number
         | false
         | ((
-              query: Query<
-                  DataSourceResponse<TDataSource>,
-                  DataSourceError<TDataSource>,
-                  TQueryData,
-                  DataSourceKey
-              >,
+              query: Query<TQueryFnData, TError, TQueryData, TQueryKey>,
           ) => number | false | undefined);
-    queryFn?:
-        | QueryFunction<DataSourceResponse<TDataSource>, DataSourceKey, TPageParams>
-        | SkipToken;
-} => {
+    queryFn?: QueryFunction<TQueryFnData, TQueryKey, TPageParam> | SkipToken;
+}
+
+export const useRefetchInterval = <
+    TQueryFnData = unknown,
+    TError = DefaultError,
+    TQueryData = TQueryFnData,
+    TQueryKey extends QueryKey = QueryKey,
+    TPageParam = never,
+>(
+    refetchInterval?: RefetchInterval<TQueryFnData, TError, TQueryData, TQueryKey>,
+    queryFn?: QueryFunction<TQueryFnData, TQueryKey, TPageParam> | SkipToken,
+): UseRefetchIntervalResult<TQueryFnData, TError, TQueryData, TQueryKey, TPageParam> => {
     const count = React.useRef<number>(0);
 
-    const queryFn = React.useMemo(() => {
-        if (typeof queryFnOption === 'function') {
-            return (context: QueryFunctionContext<DataSourceKey, TPageParams>) => {
-                count.current++;
-                return queryFnOption(context);
-            };
+    const actualQueryFn = React.useMemo(() => {
+        if (typeof queryFn === 'function') {
+            return ((context) => {
+                ++count.current;
+                return queryFn(context);
+            }) satisfies UseRefetchIntervalResult<
+                TQueryFnData,
+                TError,
+                TQueryData,
+                TQueryKey,
+                TPageParam
+            >['queryFn'];
         }
-        return undefined;
-    }, [queryFnOption]);
 
-    const refetchInterval = React.useMemo(() => {
-        if (typeof refetchIntervalOption === 'function') {
-            return (
-                query: Query<
-                    DataSourceResponse<TDataSource>,
-                    DataSourceError<TDataSource>,
-                    TQueryData,
-                    DataSourceKey
-                >,
-            ) => {
-                return refetchIntervalOption(query, count.current);
-            };
+        return queryFn;
+    }, [queryFn]);
+
+    const actualRefetchInterval = React.useMemo(() => {
+        if (typeof refetchInterval === 'function') {
+            return ((query) => {
+                return refetchInterval(query, count.current);
+            }) satisfies UseRefetchIntervalResult<
+                TQueryFnData,
+                TError,
+                TQueryData,
+                TQueryKey,
+                TPageParam
+            >['refetchInterval'];
         }
-        return refetchIntervalOption;
-    }, [refetchIntervalOption]);
 
-    return {refetchInterval, queryFn};
+        return refetchInterval;
+    }, [refetchInterval]);
+
+    return {queryFn: actualQueryFn, refetchInterval: actualRefetchInterval};
 };

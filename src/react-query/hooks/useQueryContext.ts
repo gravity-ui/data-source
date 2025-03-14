@@ -2,7 +2,7 @@ import {useMemo} from 'react';
 
 import {useQueryClient} from '@tanstack/react-query';
 
-import type {QueryDataSourceContext} from '../types';
+import type {QueryDataSourceContext} from '../types/base';
 
 export const useQueryContext = (): QueryDataSourceContext => {
     const queryClient = useQueryClient();

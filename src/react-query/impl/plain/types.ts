@@ -8,7 +8,8 @@ import type {
 import type {Overwrite} from 'utility-types';
 
 import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
-import type {QueryDataExtendedOptions, QueryDataSourceContext} from '../../types';
+import type {QueryDataSourceContext} from '../../types/base';
+import type {QueryDataAdditionalOptions} from '../../types/options';
 
 export type QueryObserverExtendedOptions<
     TQueryFnData = unknown,
@@ -17,11 +18,10 @@ export type QueryObserverExtendedOptions<
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
     TPageParam = never,
-> = Omit<
+> = Overwrite<
     QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
-    'refetchInterval'
-> &
-    QueryDataExtendedOptions<TQueryFnData, TError, TQueryData, TQueryKey>;
+    QueryDataAdditionalOptions<TQueryFnData, TError, TQueryData, TQueryKey>
+>;
 
 export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
     QueryDataSourceContext,
