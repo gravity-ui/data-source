@@ -11,32 +11,12 @@ import type {
     DataSourceState,
 } from '../../../core';
 import {useRefetchInterval} from '../../hooks/useRefetchInterval';
-import type {AnyQueryDataSource} from '../../types';
 import {normalizeStatus} from '../../utils/normalizeStatus';
 
 import type {AnyPlainQueryDataSource, QueryObserverExtendedOptions} from './types';
 import {composeOptions} from './utils';
 
-export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
-    context: DataSourceContext<TDataSource>,
-    dataSource: TDataSource,
-    params: DataSourceParams<TDataSource>,
-    options?: Partial<DataSourceOptions<TDataSource>>,
-): DataSourceState<TDataSource> => {
-    const composedOptions = composeOptions(context, dataSource, params, options);
-
-    const extendedOptions = useQueryDataOptions(composedOptions);
-
-    const result = useQuery(extendedOptions);
-
-    return {
-        ...result,
-        status: normalizeStatus(result.status, result.fetchStatus),
-        originalStatus: result.status,
-    } as DataSourceState<TDataSource>;
-};
-
-export function useQueryDataOptions<TDataSource extends AnyQueryDataSource>(
+const usePlainQueryDataOptions = <TDataSource extends AnyPlainQueryDataSource>(
     composedOptions: QueryObserverExtendedOptions<
         DataSourceResponse<TDataSource>,
         DataSourceError<TDataSource>,
@@ -50,14 +30,31 @@ export function useQueryDataOptions<TDataSource extends AnyQueryDataSource>(
     DataSourceData<TDataSource>,
     DataSourceResponse<TDataSource>,
     DataSourceKey
-> {
+> => {
     const {
-        refetchInterval: refetchIntervalOption,
         queryFn: queryFnOption,
+        refetchInterval: refetchIntervalOption,
         ...restOptions
-    } = composedOptions || {};
+    } = composedOptions;
 
-    const {refetchInterval, queryFn} = useRefetchInterval(refetchIntervalOption, queryFnOption);
+    const {queryFn, refetchInterval} = useRefetchInterval(refetchIntervalOption, queryFnOption);
 
-    return {...restOptions, refetchInterval, queryFn};
-}
+    return {...restOptions, queryFn, refetchInterval};
+};
+
+export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
+    context: DataSourceContext<TDataSource>,
+    dataSource: TDataSource,
+    params: DataSourceParams<TDataSource>,
+    options?: Partial<DataSourceOptions<TDataSource>>,
+): DataSourceState<TDataSource> => {
+    const extendedOptions = composeOptions(context, dataSource, params, options);
+    const composedOptions = usePlainQueryDataOptions(extendedOptions);
+    const state = useQuery(composedOptions);
+
+    return {
+        ...state,
+        status: normalizeStatus(state.status, state.fetchStatus),
+        originalStatus: state.status,
+    } as DataSourceState<TDataSource>;
+};

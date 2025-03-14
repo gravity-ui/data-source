@@ -1,6 +1,6 @@
 import type {DataSourceKey, DataSourceTag} from '../types/DataSource';
 
-export const hasTag = (key: DataSourceKey, tag: DataSourceTag) => {
+export const hasTag = (key: DataSourceKey, tag: DataSourceTag): boolean => {
     if (!Array.isArray(key)) {
         return false;
     }

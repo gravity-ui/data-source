@@ -3,7 +3,7 @@ import {useInfiniteQueryData} from '../impl/infinite/hooks';
 import type {AnyInfiniteQueryDataSource} from '../impl/infinite/types';
 import {usePlainQueryData} from '../impl/plain/hooks';
 import type {AnyPlainQueryDataSource} from '../impl/plain/types';
-import type {AnyQueryDataSource} from '../types';
+import type {AnyQueryDataSource} from '../types/base';
 import {notReachable} from '../utils/notReachable';
 
 import {useQueryContext} from './useQueryContext';

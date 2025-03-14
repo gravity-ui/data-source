@@ -1,33 +1,33 @@
 import type {
     DefaultError,
     InfiniteData,
+    InfiniteQueryObserverOptions,
     InfiniteQueryObserverResult,
-    InfiniteQueryPageParamsOptions,
     QueryFunctionContext,
     QueryKey,
 } from '@tanstack/react-query';
 import type {Overwrite} from 'utility-types';
 
 import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
-import type {QueryDataSourceContext} from '../../types';
-import type {QueryObserverExtendedOptions} from '../plain/types';
+import type {QueryDataSourceContext} from '../../types/base';
+import type {QueryDataAdditionalOptions} from '../../types/options';
 
-export interface InfiniteQueryObserverExtendedOptions<
+export type InfiniteQueryObserverExtendedOptions<
     TQueryFnData = unknown,
     TError = DefaultError,
     TData = TQueryFnData,
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
     TPageParam = unknown,
-> extends QueryObserverExtendedOptions<
-            TQueryFnData,
-            TError,
-            TData,
-            InfiniteData<TQueryData, TPageParam>,
-            TQueryKey,
-            TPageParam
-        >,
-        InfiniteQueryPageParamsOptions<TQueryFnData, TPageParam> {}
+> = Overwrite<
+    InfiniteQueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
+    QueryDataAdditionalOptions<
+        TQueryFnData,
+        TError,
+        InfiniteData<TQueryData, TPageParam>,
+        TQueryKey
+    >
+>;
 
 export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
     QueryDataSourceContext,

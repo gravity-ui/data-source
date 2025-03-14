@@ -109,27 +109,24 @@ export class ClientDataManager implements DataManager {
         );
     }
 
-    private invalidateQueries(
+    protected invalidateQueries(
         filters: InvalidateQueryFilters,
         invalidateOptions?: InvalidateOptions,
     ) {
-        const {repeat} = invalidateOptions || {};
-
         const invalidate = () => this.queryClient.invalidateQueries(filters);
 
-        this.repeatInvalidate(invalidate, repeat);
+        this.repeatInvalidate(invalidate, invalidateOptions?.repeat);
 
         return invalidate();
     }
 
-    private repeatInvalidate(invalidate: () => Promise<void>, repeat?: InvalidateRepeatOptions) {
+    protected repeatInvalidate(invalidate: () => Promise<void>, repeat?: InvalidateRepeatOptions) {
         if (!repeat) {
             return;
         }
-        const {interval, count} = repeat;
 
-        for (let i = 1; i <= count; i++) {
-            setTimeout(invalidate, interval * i);
+        for (let i = 1; i <= repeat.count; i++) {
+            setTimeout(invalidate, repeat.interval * i);
         }
     }
 }

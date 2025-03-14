@@ -1,8 +1,12 @@
 import type {DefaultError, QueryKey} from '@tanstack/react-query';
 
-import type {ProgressiveRefetchInterval, RefetchIntervalFunction} from '../types';
+import type {RefetchIntervalFunction} from '../types/refetch-interval';
 
-const BASE = 2;
+export interface ProgressiveRefetchOptions {
+    minInterval: number;
+    maxInterval: number;
+    multiplier?: number;
+}
 
 export const getProgressiveRefetch = <
     TQueryFnData = unknown,
@@ -12,8 +16,9 @@ export const getProgressiveRefetch = <
 >({
     minInterval,
     maxInterval,
-}: ProgressiveRefetchInterval): RefetchIntervalFunction<TQueryFnData, TError, TData, TQueryKey> => {
-    return (_, queryRefetchCount) => {
-        return Math.min(minInterval * BASE ** queryRefetchCount, maxInterval);
+    multiplier = 2,
+}: ProgressiveRefetchOptions): RefetchIntervalFunction<TQueryFnData, TError, TData, TQueryKey> => {
+    return (_query, count) => {
+        return Math.min(minInterval * multiplier ** count, maxInterval);
     };
 };
