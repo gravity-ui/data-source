@@ -11,6 +11,7 @@ import type {
     DataSourceParams,
     DataSourceResponse,
 } from '../../../core';
+import type {nullSymbol, undefinedSymbol} from '../utils';
 import {formatNullableValue, parseNullableValue} from '../utils';
 
 import type {
@@ -38,22 +39,26 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
 
     const queryFn = async (
         fetchContext: QueryFunctionContext<DataSourceKey, AnyPageParam>,
-    ): Promise<DataSourceResponse<TDataSource>> => {
+    ): Promise<DataSourceResponse<TDataSource> | typeof undefinedSymbol | typeof nullSymbol> => {
         const request = transformParams ? transformParams(params) : params;
         const paginatedRequest = {...request, ...fetchContext.pageParam};
 
         try {
-            const fetchResult = await dataSource.fetch(context, fetchContext, paginatedRequest);
+            const response = await dataSource.fetch(context, fetchContext, paginatedRequest);
 
-            return formatNullableValue(fetchResult);
+            return formatNullableValue(response);
         } catch (error) {
-            if (!transformError) throw error;
+            if (!transformError) {
+                throw error;
+            }
 
             return formatNullableValue(transformError(error));
         }
     };
 
-    const innerTransform = (response: any): any => {
+    const selectPage = (
+        response: DataSourceResponse<TDataSource> | typeof undefinedSymbol | typeof nullSymbol,
+    ): DataSourceData<TDataSource> => {
         const actualResponse = parseNullableValue(response);
 
         return transformResponse ? transformResponse(actualResponse) : actualResponse;
@@ -62,7 +67,7 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
     return {
         queryKey: composeFullKey(dataSource, params),
         queryFn: params === idle ? skipToken : queryFn,
-        select: (data) => ({...data, pages: data.pages.map(innerTransform)}),
+        select: (data) => ({...data, pages: data.pages.map(selectPage)}),
         initialPageParam: EMPTY_OBJECT,
         getNextPageParam: next,
         getPreviousPageParam: prev,

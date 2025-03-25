@@ -45,35 +45,41 @@ export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError,
         TError,
         TErrorResponse,
         InfiniteQueryObserverExtendedOptions<
-            ActualResponse<TResponse, TErrorResponse>,
-            TError,
-            InfiniteData<ActualData<TResponse, TErrorResponse, TData>, Partial<TRequest>>,
-            ActualResponse<TResponse, TErrorResponse>,
+            ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
+            NoInfer<TError>,
+            InfiniteData<
+                ActualData<NoInfer<TResponse>, NoInfer<TData>, NoInfer<TErrorResponse>>,
+                Partial<NoInfer<TRequest>>
+            >,
+            ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
             DataSourceKey,
-            Partial<TRequest>
+            Partial<NoInfer<TRequest>>
         >,
         ResultWrapper<
             InfiniteQueryObserverResult<
-                InfiniteData<ActualData<TResponse, TErrorResponse, TData>, Partial<TRequest>>,
-                TError
+                InfiniteData<
+                    ActualData<NoInfer<TResponse>, NoInfer<TData>, NoInfer<TErrorResponse>>,
+                    Partial<NoInfer<TRequest>>
+                >,
+                NoInfer<TError>
             >,
-            TRequest,
-            TResponse,
-            TData,
-            TError,
-            TErrorResponse
+            NoInfer<TRequest>,
+            NoInfer<TResponse>,
+            NoInfer<TData>,
+            NoInfer<TError>,
+            NoInfer<TErrorResponse>
         >,
-        QueryFunctionContext<DataSourceKey, Partial<TRequest>>
+        QueryFunctionContext<DataSourceKey, Partial<NoInfer<TRequest>>>
     > & {
         type: 'infinite';
         next: (
-            lastPage: ActualResponse<TResponse, TErrorResponse>,
-            allPages: ActualResponse<TResponse, TErrorResponse>[],
-        ) => Partial<TRequest> | null | undefined;
+            lastPage: ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
+            allPages: Array<ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>>,
+        ) => Partial<NoInfer<TRequest>> | undefined | null;
         prev?: (
-            firstPage: ActualResponse<TResponse, TErrorResponse>,
-            allPages: ActualResponse<TResponse, TErrorResponse>[],
-        ) => Partial<TRequest> | null | undefined;
+            firstPage: ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
+            allPages: Array<ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>>,
+        ) => Partial<NoInfer<TRequest>> | undefined | null;
     };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,14 +91,14 @@ export type AnyPageParam = Partial<any>;
 
 type ResultWrapper<TResult, TRequest, TResponse, TData, TError, TErrorResponse> =
     TResult extends InfiniteQueryObserverResult<
-        InfiniteData<ActualData<TResponse, TErrorResponse, TData>, Partial<TRequest>>,
+        InfiniteData<ActualData<TResponse, TData, TErrorResponse>, Partial<TRequest>>,
         TError
     >
         ? Overwrite<
               TResult,
               {
                   status: DataLoaderStatus;
-                  data: Array<FlatArray<Array<ActualData<TResponse, TErrorResponse, TData>>, 1>>;
+                  data: Array<FlatArray<Array<ActualData<TResponse, TData, TErrorResponse>>, 1>>;
               }
           > & {
               originalStatus: TResult['status'];

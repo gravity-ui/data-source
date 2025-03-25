@@ -3,7 +3,6 @@ import type {idle} from '../constants';
 export type DataSourceKey = ReadonlyArray<unknown>;
 export type DataSourceTag = string;
 
-declare const errorHintSymbol: unique symbol;
 declare const stateHintSymbol: unique symbol;
 
 export interface DataSource<
@@ -25,18 +24,17 @@ export interface DataSource<
         fetchContext: TFetchContext,
         request: TRequest,
     ) => Promise<TResponse> | TResponse;
-    tags?: (params: ActualParams<TParams, TRequest>) => DataSourceTag[];
+    tags?: (params: ActualParams<NoInfer<TParams>, NoInfer<TRequest>>) => DataSourceTag[];
 
-    transformParams?: (params: TParams) => TRequest;
+    transformParams?: (params: TParams) => NoInfer<TRequest>;
+    transformResponse?: (
+        response: ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
+    ) => TData;
 
     /**
      * When set, the `fetch` errors will be transformed into data without changing the state to error.
-     * @returns NonNullable
      */
     transformError?: (error: TError) => TErrorResponse;
-    transformResponse?: (response: ActualResponse<TResponse, TErrorResponse>) => TData;
-
-    [errorHintSymbol]?: TError;
 
     options?: Partial<TOptions>;
     [stateHintSymbol]?: TState;
@@ -122,7 +120,7 @@ export type DataSourceData<TDataSource> =
         infer _TState,
         infer _TFetchContext
     >
-        ? ActualData<TResponse, TErrorResponse, TData>
+        ? ActualData<TResponse, TData, TErrorResponse>
         : never;
 
 export type DataSourceError<TDataSource> =
@@ -213,6 +211,6 @@ export type ActualResponse<TResponse, TErrorResponse> = unknown extends TErrorRe
     ? TResponse
     : TResponse | TErrorResponse;
 
-export type ActualData<TResponse, TErrorResponse, TData> = unknown extends TData
+export type ActualData<TResponse, TData, TErrorResponse> = unknown extends TData
     ? ActualResponse<TResponse, TErrorResponse>
     : TData;

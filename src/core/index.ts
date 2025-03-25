@@ -7,6 +7,7 @@ export type {
     DataSourceParams,
     DataSourceRequest,
     DataSourceResponse,
+    DataSourceErrorResponse,
     DataSourceData,
     DataSourceError,
     DataSourceOptions,
