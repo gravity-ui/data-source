@@ -10,6 +10,7 @@ import type {
     DataSourceParams,
     DataSourceResponse,
 } from '../../../core';
+import type {nullSymbol, undefinedSymbol} from '../utils';
 import {formatNullableValue, parseNullableValue} from '../utils';
 
 import type {AnyPlainQueryDataSource, QueryObserverExtendedOptions} from './types';
@@ -26,27 +27,31 @@ export const composeOptions = <TDataSource extends AnyPlainQueryDataSource>(
     DataSourceResponse<TDataSource>,
     DataSourceKey
 > => {
-    const {transformParams, transformError, transformResponse} = dataSource;
+    const {transformParams, transformResponse, transformError} = dataSource;
 
     const queryFn = async (
         fetchContext: QueryFunctionContext<DataSourceKey>,
-    ): Promise<DataSourceResponse<TDataSource>> => {
+    ): Promise<DataSourceResponse<TDataSource> | typeof undefinedSymbol | typeof nullSymbol> => {
         try {
-            const fetchResult = await dataSource.fetch(
+            const response = await dataSource.fetch(
                 context,
                 fetchContext,
                 transformParams ? transformParams(params) : params,
             );
 
-            return formatNullableValue(fetchResult);
+            return formatNullableValue(response);
         } catch (error) {
-            if (!transformError) throw error;
+            if (!transformError) {
+                throw error;
+            }
 
             return formatNullableValue(transformError(error));
         }
     };
 
-    const innerTransform = (response: any): any => {
+    const select = (
+        response: DataSourceResponse<TDataSource> | typeof undefinedSymbol | typeof nullSymbol,
+    ): DataSourceData<TDataSource> => {
         const actualResponse = parseNullableValue(response);
 
         return transformResponse ? transformResponse(actualResponse) : actualResponse;
@@ -55,7 +60,7 @@ export const composeOptions = <TDataSource extends AnyPlainQueryDataSource>(
     return {
         queryKey: composeFullKey(dataSource, params),
         queryFn: params === idle ? skipToken : queryFn,
-        select: innerTransform,
+        select,
         ...dataSource.options,
         ...options,
     };

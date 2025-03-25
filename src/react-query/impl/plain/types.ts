@@ -39,18 +39,21 @@ export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError, TE
         TError,
         TErrorResponse,
         QueryObserverExtendedOptions<
-            ActualResponse<TResponse, TErrorResponse>,
-            TError,
-            ActualData<TResponse, TErrorResponse, TData>,
-            ActualResponse<TResponse, TErrorResponse>,
+            ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
+            NoInfer<TError>,
+            ActualData<NoInfer<TResponse>, NoInfer<TData>, NoInfer<TErrorResponse>>,
+            ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
             DataSourceKey
         >,
         ResultWrapper<
-            QueryObserverResult<ActualData<TResponse, TErrorResponse, TData>, TError>,
-            TResponse,
-            TData,
-            TError,
-            TErrorResponse
+            QueryObserverResult<
+                ActualData<NoInfer<TResponse>, NoInfer<TData>, NoInfer<TErrorResponse>>,
+                NoInfer<TError>
+            >,
+            NoInfer<TResponse>,
+            NoInfer<TData>,
+            NoInfer<TError>,
+            NoInfer<TErrorResponse>
         >,
         QueryFunctionContext<DataSourceKey>
     > & {
@@ -61,6 +64,6 @@ export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError, TE
 export type AnyPlainQueryDataSource = PlainQueryDataSource<any, any, any, any, any, any>;
 
 type ResultWrapper<TResult, TResponse, TData, TError, TErrorResponse> =
-    TResult extends QueryObserverResult<ActualData<TResponse, TErrorResponse, TData>, TError>
+    TResult extends QueryObserverResult<ActualData<TResponse, TData, TErrorResponse>, TError>
         ? Overwrite<TResult, {status: DataLoaderStatus}> & {originalStatus: TResult['status']}
         : never;
