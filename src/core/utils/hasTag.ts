@@ -10,5 +10,5 @@ export const hasTag = (key: DataSourceKey, tag: DataSourceTag): boolean => {
     // First element — data source name
     // Last element — full key
     // Skip them for consistency
-    return index > 0 && index < key.length - 2;
+    return index > 0 && index < key.length - 1;
 };

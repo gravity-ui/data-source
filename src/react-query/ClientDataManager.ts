@@ -16,18 +16,18 @@ export type ClientDataManagerConfig = QueryClientConfig;
 export class ClientDataManager implements DataManager {
     readonly queryClient: QueryClient;
 
-    constructor(conifg: ClientDataManagerConfig = {}) {
+    constructor(config: ClientDataManagerConfig = {}) {
         this.queryClient = new QueryClient({
-            ...conifg,
+            ...config,
             defaultOptions: {
-                ...conifg.defaultOptions,
+                ...config.defaultOptions,
                 queries: {
                     networkMode: 'always',
-                    ...conifg.defaultOptions?.queries,
+                    ...config.defaultOptions?.queries,
                 },
                 mutations: {
                     networkMode: 'always',
-                    ...conifg.defaultOptions?.mutations,
+                    ...config.defaultOptions?.mutations,
                 },
             },
         });

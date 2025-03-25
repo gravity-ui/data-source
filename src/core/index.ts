@@ -17,7 +17,7 @@ export type {
     ActualData,
     ActualResponse,
 } from './types/DataSource';
-export type {DataManager} from './types/DataManger';
+export type {DataManager} from './types/DataManager';
 export type {DataLoaderStatus} from './types/DataLoaderStatus';
 export type {InvalidateRepeatOptions, InvalidateOptions} from './types/DataManagerOptions';
 
