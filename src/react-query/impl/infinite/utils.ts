@@ -11,6 +11,7 @@ import type {
     DataSourceParams,
     DataSourceResponse,
 } from '../../../core';
+import {formatNullableValue, parseNullableValue} from '../utils';
 
 import type {
     AnyInfiniteQueryDataSource,
@@ -33,23 +34,35 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
     DataSourceKey,
     AnyPageParam
 > => {
-    const {transformParams, transformResponse, next, prev} = dataSource;
+    const {transformParams, transformError, transformResponse, next, prev} = dataSource;
 
-    const queryFn = (
+    const queryFn = async (
         fetchContext: QueryFunctionContext<DataSourceKey, AnyPageParam>,
-    ): DataSourceResponse<TDataSource> | Promise<DataSourceResponse<TDataSource>> => {
+    ): Promise<DataSourceResponse<TDataSource>> => {
         const request = transformParams ? transformParams(params) : params;
         const paginatedRequest = {...request, ...fetchContext.pageParam};
 
-        return dataSource.fetch(context, fetchContext, paginatedRequest);
+        try {
+            const fetchResult = await dataSource.fetch(context, fetchContext, paginatedRequest);
+
+            return formatNullableValue(fetchResult);
+        } catch (error) {
+            if (!transformError) throw error;
+
+            return formatNullableValue(transformError(error));
+        }
+    };
+
+    const innerTransform = (response: any): any => {
+        const actualResponse = parseNullableValue(response);
+
+        return transformResponse ? transformResponse(actualResponse) : actualResponse;
     };
 
     return {
         queryKey: composeFullKey(dataSource, params),
         queryFn: params === idle ? skipToken : queryFn,
-        select: transformResponse
-            ? (data) => ({...data, pages: data.pages.map(transformResponse)})
-            : undefined,
+        select: (data) => ({...data, pages: data.pages.map(innerTransform)}),
         initialPageParam: EMPTY_OBJECT,
         getNextPageParam: next,
         getPreviousPageParam: prev,

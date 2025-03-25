@@ -7,7 +7,13 @@ import type {
 } from '@tanstack/react-query';
 import type {Overwrite} from 'utility-types';
 
-import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
+import type {
+    ActualData,
+    ActualResponse,
+    DataLoaderStatus,
+    DataSource,
+    DataSourceKey,
+} from '../../../core';
 import type {QueryDataSourceContext} from '../../types/base';
 import type {QueryDataAdditionalOptions} from '../../types/options';
 
@@ -23,35 +29,38 @@ export type QueryObserverExtendedOptions<
     QueryDataAdditionalOptions<TQueryFnData, TError, TQueryData, TQueryKey>
 >;
 
-export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
-    QueryDataSourceContext,
-    TParams,
-    TRequest,
-    TResponse,
-    TData,
-    TError,
-    QueryObserverExtendedOptions<
-        TResponse,
-        TError,
-        ActualData<TData, TResponse>,
-        TResponse,
-        DataSourceKey
-    >,
-    ResultWrapper<
-        QueryObserverResult<ActualData<TData, TResponse>, TError>,
+export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError, TErrorResponse> =
+    DataSource<
+        QueryDataSourceContext,
+        TParams,
+        TRequest,
         TResponse,
         TData,
-        TError
-    >,
-    QueryFunctionContext<DataSourceKey>
-> & {
-    type: 'plain';
-};
+        TError,
+        TErrorResponse,
+        QueryObserverExtendedOptions<
+            ActualResponse<TResponse, TErrorResponse>,
+            TError,
+            ActualData<TResponse, TErrorResponse, TData>,
+            ActualResponse<TResponse, TErrorResponse>,
+            DataSourceKey
+        >,
+        ResultWrapper<
+            QueryObserverResult<ActualData<TResponse, TErrorResponse, TData>, TError>,
+            TResponse,
+            TData,
+            TError,
+            TErrorResponse
+        >,
+        QueryFunctionContext<DataSourceKey>
+    > & {
+        type: 'plain';
+    };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyPlainQueryDataSource = PlainQueryDataSource<any, any, any, any, any>;
+export type AnyPlainQueryDataSource = PlainQueryDataSource<any, any, any, any, any, any>;
 
-type ResultWrapper<TResult, TResponse, TData, TError> =
-    TResult extends QueryObserverResult<ActualData<TData, TResponse>, TError>
+type ResultWrapper<TResult, TResponse, TData, TError, TErrorResponse> =
+    TResult extends QueryObserverResult<ActualData<TResponse, TErrorResponse, TData>, TError>
         ? Overwrite<TResult, {status: DataLoaderStatus}> & {originalStatus: TResult['status']}
         : never;
