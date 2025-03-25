@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/gravity-ui/data-source/compare/v0.5.1...v0.6.0) (2025-03-25)
+
+
+### Features
+
+* add the transformError data-source function ([#24](https://github.com/gravity-ui/data-source/issues/24)) ([16c1775](https://github.com/gravity-ui/data-source/commit/16c177512412d96ab14bfa9f3f88610b04f65a36))
+
+
+### Bug Fixes
+
+* add NoInfer ([#28](https://github.com/gravity-ui/data-source/issues/28)) ([c3d6c93](https://github.com/gravity-ui/data-source/commit/c3d6c93c50f1e59f558aed0dc35c797800025045))
+
 ## [0.5.1](https://github.com/gravity-ui/data-source/compare/v0.5.0...v0.5.1) (2025-03-14)
 
 
