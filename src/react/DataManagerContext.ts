@@ -9,7 +9,7 @@ export const useDataManager = () => {
 
     if (!dataManager) {
         throw new Error(
-            'DataManager is not provied by context. Use DataManagerContext.Provider to do it',
+            'DataManager is not provided by context. Use DataManagerContext.Provider to do it',
         );
     }
 
