@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/gravity-ui/data-source/compare/v0.6.0...v0.6.1) (2025-03-25)
+
+
+### Bug Fixes
+
+* fix typo and hasTag function ([#29](https://github.com/gravity-ui/data-source/issues/29)) ([a0f1ae1](https://github.com/gravity-ui/data-source/commit/a0f1ae183d3b41b1e1b3bf0575b2f0bc3af16efb))
+
 ## [0.6.0](https://github.com/gravity-ui/data-source/compare/v0.5.1...v0.6.0) (2025-03-25)
 
 
