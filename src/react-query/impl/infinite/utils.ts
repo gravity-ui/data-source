@@ -59,7 +59,7 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
     const selectPage = (
         response: DataSourceResponse<TDataSource> | typeof undefinedSymbol | typeof nullSymbol,
     ): DataSourceData<TDataSource> => {
-        const actualResponse = parseNullableValue(response);
+        const actualResponse = parseNullableValue(response) as DataSourceData<TDataSource>;
 
         return transformResponse ? transformResponse(actualResponse) : actualResponse;
     };
