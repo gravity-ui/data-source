@@ -8,17 +8,15 @@ export interface WithDataManagerProps {
     dataManager: DataManager;
 }
 
-export const withDataManager = <T extends WithDataManagerProps>(
-    WrappedComponent: React.ComponentType<WithDataManagerProps>,
-) => {
+export const withDataManager = <T,>(Component: React.ComponentType<T & WithDataManagerProps>) => {
     const ComponentWithDataManager: React.FC<T> = (props) => {
         const dataManager = useDataManager();
 
-        return <WrappedComponent {...props} dataManager={dataManager} />;
+        return <Component {...props} dataManager={dataManager} />;
     };
 
     ComponentWithDataManager.displayName = `WithDataManager${
-        WrappedComponent.displayName || WrappedComponent.name || 'Component'
+        Component.displayName || Component.name || 'Component'
     }`;
 
     return ComponentWithDataManager;
