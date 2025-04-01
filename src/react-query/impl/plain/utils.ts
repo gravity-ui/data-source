@@ -10,8 +10,9 @@ import type {
     DataSourceParams,
     DataSourceResponse,
 } from '../../../core';
-import type {nullSymbol, undefinedSymbol} from '../utils';
-import {formatNullableValue, parseNullableValue} from '../utils';
+import type {nullSymbol, undefinedSymbol} from '../../constants';
+import {formatNullableValue} from '../../utils/formatNullableValue';
+import {parseNullableValue} from '../../utils/parseNullableValue';
 
 import type {AnyPlainQueryDataSource, QueryObserverExtendedOptions} from './types';
 
