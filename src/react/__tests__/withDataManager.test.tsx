@@ -3,6 +3,7 @@ import React from 'react';
 import {render, screen} from '@testing-library/react';
 
 import type {DataManager} from '../../core';
+import {useDataManager} from '../DataManagerContext';
 import type {WithDataManagerProps} from '../withDataManager';
 import {withDataManager} from '../withDataManager';
 
@@ -28,7 +29,6 @@ describe('withDataManager', () => {
     beforeEach(() => {
         jest.clearAllMocks();
 
-        const {useDataManager} = require('../DataManagerContext');
         (useDataManager as jest.Mock).mockReturnValue(mockDataManager);
     });
 
