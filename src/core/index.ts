@@ -30,5 +30,6 @@ export {getStatus} from './utils/getStatus';
 export {hasTag} from './utils/hasTag';
 export {mergeStatuses} from './utils/mergeStatuses';
 export {skipContext} from './utils/skipContext';
+export {withCatch} from './utils/withCatch';
 export type {Cancellable} from './utils/withCancellation';
 export {isCancellable, isAbortable, withCancellation} from './utils/withCancellation';

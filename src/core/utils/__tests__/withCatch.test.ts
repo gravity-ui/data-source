@@ -1,11 +1,11 @@
-import {makeSafeFetch} from '../makeSafeFetch';
+import {withCatch} from '../withCatch';
 
-describe('makeSafeFetch', () => {
+describe('withCatch', () => {
     it('should return the result of the fetch function when it succeeds', async () => {
         const mockFetch = jest.fn().mockResolvedValue({data: 'success'});
         const mockErrorHandler = jest.fn().mockReturnValue({error: 'handled'});
 
-        const safeFetch = makeSafeFetch(mockFetch, mockErrorHandler);
+        const safeFetch = withCatch(mockFetch, mockErrorHandler);
         const result = await safeFetch('arg1', 42);
 
         expect(mockFetch).toHaveBeenCalledWith('arg1', 42);
@@ -18,7 +18,7 @@ describe('makeSafeFetch', () => {
         const mockFetch = jest.fn().mockRejectedValue(error);
         const mockErrorHandler = jest.fn().mockReturnValue({error: 'handled'});
 
-        const safeFetch = makeSafeFetch(mockFetch, mockErrorHandler);
+        const safeFetch = withCatch(mockFetch, mockErrorHandler);
         const result = await safeFetch('arg1', 42);
 
         expect(mockFetch).toHaveBeenCalledWith('arg1', 42);
@@ -30,7 +30,7 @@ describe('makeSafeFetch', () => {
         const mockFetch = jest.fn().mockResolvedValue({data: 'success'});
         const mockErrorHandler = jest.fn().mockReturnValue({error: 'handled'});
 
-        const safeFetch = makeSafeFetch(mockFetch, mockErrorHandler);
+        const safeFetch = withCatch(mockFetch, mockErrorHandler);
         const result = await safeFetch();
 
         expect(mockFetch).toHaveBeenCalledWith();
@@ -42,7 +42,7 @@ describe('makeSafeFetch', () => {
         const mockFetch = jest.fn().mockResolvedValue({data: 'success'});
         const mockErrorHandler = jest.fn().mockReturnValue({error: 'handled'});
 
-        const safeFetch = makeSafeFetch(mockFetch, mockErrorHandler);
+        const safeFetch = withCatch(mockFetch, mockErrorHandler);
         const result = await safeFetch('arg1', 42, true, {complex: 'object'});
 
         expect(mockFetch).toHaveBeenCalledWith('arg1', 42, true, {complex: 'object'});
@@ -55,7 +55,7 @@ describe('makeSafeFetch', () => {
         const mockFetch = jest.fn().mockRejectedValue(error);
         const mockErrorHandler = jest.fn().mockResolvedValue({error: 'async handled'});
 
-        const safeFetch = makeSafeFetch(mockFetch, mockErrorHandler);
+        const safeFetch = withCatch(mockFetch, mockErrorHandler);
         const result = await safeFetch('arg1');
 
         expect(mockFetch).toHaveBeenCalledWith('arg1');
@@ -76,7 +76,7 @@ describe('makeSafeFetch', () => {
 
         const mockErrorHandler = jest.fn().mockReturnValue(null);
 
-        const safeFetch = makeSafeFetch<[string], User, null>(mockFetch, mockErrorHandler);
+        const safeFetch = withCatch<[string], User, null>(mockFetch, mockErrorHandler);
         const result = await safeFetch('user1');
 
         expect(result).toEqual({id: 1, name: 'John Doe'});
@@ -102,10 +102,7 @@ describe('makeSafeFetch', () => {
             message: 'Internal Server Error',
         } as ErrorResponse);
 
-        const safeFetch = makeSafeFetch<[string], unknown, ErrorResponse>(
-            mockFetch,
-            mockErrorHandler,
-        );
+        const safeFetch = withCatch<[string], unknown, ErrorResponse>(mockFetch, mockErrorHandler);
         const result = await safeFetch('user1');
 
         expect(mockErrorHandler).toHaveBeenCalledWith(error);
