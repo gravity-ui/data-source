@@ -3,6 +3,7 @@ import type {idle} from '../constants';
 export type DataSourceKey = ReadonlyArray<unknown>;
 export type DataSourceTag = string;
 
+declare const errorHintSymbol: unique symbol;
 declare const stateHintSymbol: unique symbol;
 
 export interface DataSource<
@@ -12,7 +13,6 @@ export interface DataSource<
     TResponse,
     TData,
     TError,
-    TErrorResponse,
     TOptions,
     TState,
     TFetchContext,
@@ -27,21 +27,15 @@ export interface DataSource<
     tags?: (params: ActualParams<NoInfer<TParams>, NoInfer<TRequest>>) => DataSourceTag[];
 
     transformParams?: (params: TParams) => NoInfer<TRequest>;
-    transformResponse?: (
-        response: ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
-    ) => TData;
-
-    /**
-     * When set, the `fetch` errors will be transformed into data without changing the state to error.
-     */
-    transformError?: (error: TError) => TErrorResponse;
+    transformResponse?: (response: TResponse) => TData;
 
     options?: Partial<TOptions>;
     [stateHintSymbol]?: TState;
+    [errorHintSymbol]?: TError;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyDataSource = DataSource<any, any, any, any, any, any, any, any, any, any>;
+export type AnyDataSource = DataSource<any, any, any, any, any, any, any, any, any>;
 
 export type DataSourceContext<TDataSource> =
     TDataSource extends DataSource<
@@ -51,7 +45,6 @@ export type DataSourceContext<TDataSource> =
         infer _TResponse,
         infer _TData,
         infer _TError,
-        infer _TErrorResponse,
         infer _TOptions,
         infer _TState,
         infer _TFetchContext
@@ -67,7 +60,6 @@ export type DataSourceParams<TDataSource> =
         infer _TResponse,
         infer _TData,
         infer _TError,
-        infer _TErrorResponse,
         infer _TOptions,
         infer _TState,
         infer _TFetchContext
@@ -83,7 +75,6 @@ export type DataSourceRequest<TDataSource> =
         infer _TResponse,
         infer _TData,
         infer _TError,
-        infer _TErrorResponse,
         infer _TOptions,
         infer _TState,
         infer _TFetchContext
@@ -99,12 +90,11 @@ export type DataSourceResponse<TDataSource> =
         infer TResponse,
         infer _TData,
         infer _TError,
-        infer TErrorResponse,
         infer _TOptions,
         infer _TState,
         infer _TFetchContext
     >
-        ? ActualResponse<TResponse, TErrorResponse>
+        ? TResponse
         : never;
 
 export type DataSourceData<TDataSource> =
@@ -115,12 +105,11 @@ export type DataSourceData<TDataSource> =
         infer TResponse,
         infer TData,
         infer _TError,
-        infer TErrorResponse,
         infer _TOptions,
         infer _TState,
         infer _TFetchContext
     >
-        ? ActualData<TResponse, TData, TErrorResponse>
+        ? ActualData<TData, TResponse>
         : never;
 
 export type DataSourceError<TDataSource> =
@@ -131,28 +120,11 @@ export type DataSourceError<TDataSource> =
         infer _TResponse,
         infer _TData,
         infer TError,
-        infer _TErrorResponse,
         infer _TOptions,
         infer _TState,
         infer _TFetchContext
     >
         ? TError
-        : never;
-
-export type DataSourceErrorResponse<TDataSource> =
-    TDataSource extends DataSource<
-        infer _TContenxt,
-        infer _TParams,
-        infer _TRequest,
-        infer _TResponse,
-        infer _TData,
-        infer _TError,
-        infer TErrorResponse,
-        infer _TOptions,
-        infer _TState,
-        infer _TFetchContext
-    >
-        ? TErrorResponse
         : never;
 
 export type DataSourceOptions<TDataSource> =
@@ -163,7 +135,6 @@ export type DataSourceOptions<TDataSource> =
         infer _TResponse,
         infer _TData,
         infer _TError,
-        infer _TErrorResponse,
         infer TOptions,
         infer _TState,
         infer _TFetchContext
@@ -179,7 +150,6 @@ export type DataSourceState<TDataSource> =
         infer _TResponse,
         infer _TData,
         infer _TError,
-        infer _TErrorResponse,
         infer _TOptions,
         infer TState,
         infer _TFetchContext
@@ -195,7 +165,6 @@ export type DataSourceFetchContext<TDataSource> =
         infer _TResponse,
         infer _TData,
         infer _TError,
-        infer _TErrorResponse,
         infer _TOptions,
         infer _TState,
         infer TFetchContext
@@ -207,10 +176,4 @@ export type ActualParams<TParams, TRequest> =
     | (unknown extends TParams ? TRequest : TParams)
     | typeof idle;
 
-export type ActualResponse<TResponse, TErrorResponse> = unknown extends TErrorResponse
-    ? TResponse
-    : TResponse | TErrorResponse;
-
-export type ActualData<TResponse, TData, TErrorResponse> = unknown extends TData
-    ? ActualResponse<TResponse, TErrorResponse>
-    : TData;
+export type ActualData<TData, TResponse> = unknown extends TData ? TResponse : TData;

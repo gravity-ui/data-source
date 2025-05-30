@@ -28,26 +28,18 @@ export const composeOptions = <TDataSource extends AnyPlainQueryDataSource>(
     DataSourceResponse<TDataSource>,
     DataSourceKey
 > => {
-    const {transformParams, transformResponse, transformError} = dataSource;
+    const {transformParams, transformResponse} = dataSource;
 
     const queryFn = async (
         fetchContext: QueryFunctionContext<DataSourceKey>,
     ): Promise<DataSourceResponse<TDataSource> | typeof undefinedSymbol | typeof nullSymbol> => {
-        try {
-            const response = await dataSource.fetch(
-                context,
-                fetchContext,
-                transformParams ? transformParams(params) : params,
-            );
+        const response = await dataSource.fetch(
+            context,
+            fetchContext,
+            transformParams ? transformParams(params) : params,
+        );
 
-            return formatNullableValue(response);
-        } catch (error) {
-            if (!transformError) {
-                throw error;
-            }
-
-            return formatNullableValue(transformError(error));
-        }
+        return formatNullableValue(response);
     };
 
     const select = (

@@ -8,13 +8,7 @@ import type {
 } from '@tanstack/react-query';
 import type {Overwrite} from 'utility-types';
 
-import type {
-    ActualData,
-    ActualResponse,
-    DataLoaderStatus,
-    DataSource,
-    DataSourceKey,
-} from '../../../core';
+import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
 import type {QueryDataSourceContext} from '../../types/base';
 import type {QueryDataAdditionalOptions} from '../../types/options';
 
@@ -35,70 +29,55 @@ export type InfiniteQueryObserverExtendedOptions<
     >
 >;
 
-export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError, TErrorResponse> =
-    DataSource<
-        QueryDataSourceContext,
-        TParams,
-        TRequest,
-        TResponse,
-        TData,
-        TError,
-        TErrorResponse,
-        InfiniteQueryObserverExtendedOptions<
-            ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
-            NoInfer<TError>,
-            InfiniteData<
-                ActualData<NoInfer<TResponse>, NoInfer<TData>, NoInfer<TErrorResponse>>,
-                Partial<NoInfer<TRequest>>
-            >,
-            ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
-            DataSourceKey,
-            Partial<NoInfer<TRequest>>
+export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
+    QueryDataSourceContext,
+    TParams,
+    TRequest,
+    TResponse,
+    TData,
+    TError,
+    InfiniteQueryObserverExtendedOptions<
+        NoInfer<TResponse>,
+        NoInfer<TError>,
+        InfiniteData<ActualData<NoInfer<TData>, NoInfer<TResponse>>, Partial<TRequest>>,
+        NoInfer<TResponse>,
+        DataSourceKey,
+        Partial<NoInfer<TRequest>>
+    >,
+    ResultWrapper<
+        InfiniteQueryObserverResult<
+            InfiniteData<ActualData<NoInfer<TData>, NoInfer<TResponse>>, Partial<TRequest>>,
+            NoInfer<TError>
         >,
-        ResultWrapper<
-            InfiniteQueryObserverResult<
-                InfiniteData<
-                    ActualData<NoInfer<TResponse>, NoInfer<TData>, NoInfer<TErrorResponse>>,
-                    Partial<NoInfer<TRequest>>
-                >,
-                NoInfer<TError>
-            >,
-            NoInfer<TRequest>,
-            NoInfer<TResponse>,
-            NoInfer<TData>,
-            NoInfer<TError>,
-            NoInfer<TErrorResponse>
-        >,
-        QueryFunctionContext<DataSourceKey, Partial<NoInfer<TRequest>>>
-    > & {
-        type: 'infinite';
-        next: (
-            lastPage: ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
-            allPages: Array<ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>>,
-        ) => Partial<NoInfer<TRequest>> | undefined | null;
-        prev?: (
-            firstPage: ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>,
-            allPages: Array<ActualResponse<NoInfer<TResponse>, NoInfer<TErrorResponse>>>,
-        ) => Partial<NoInfer<TRequest>> | undefined | null;
-    };
+        NoInfer<TRequest>,
+        NoInfer<TResponse>,
+        NoInfer<TData>,
+        NoInfer<TError>
+    >,
+    QueryFunctionContext<DataSourceKey, Partial<NoInfer<TRequest>>>
+> & {
+    type: 'infinite';
+    next: (lastPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | null | undefined;
+    prev?: (firstPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | null | undefined;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyInfiniteQueryDataSource = InfiniteQueryDataSource<any, any, any, any, any, any>;
+export type AnyInfiniteQueryDataSource = InfiniteQueryDataSource<any, any, any, any, any>;
 
 // It is used instead of `Partial<DataSourceRequest<TDataSource>>` because TS can't calculate type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyPageParam = Partial<any>;
 
-type ResultWrapper<TResult, TRequest, TResponse, TData, TError, TErrorResponse> =
+type ResultWrapper<TResult, TRequest, TResponse, TData, TError> =
     TResult extends InfiniteQueryObserverResult<
-        InfiniteData<ActualData<TResponse, TData, TErrorResponse>, Partial<TRequest>>,
+        InfiniteData<ActualData<TData, TResponse>, Partial<TRequest>>,
         TError
     >
         ? Overwrite<
               TResult,
               {
                   status: DataLoaderStatus;
-                  data: Array<FlatArray<Array<ActualData<TResponse, TData, TErrorResponse>>, 1>>;
+                  data: Array<FlatArray<Array<ActualData<TData, TResponse>>, 1>>;
               }
           > & {
               originalStatus: TResult['status'];
