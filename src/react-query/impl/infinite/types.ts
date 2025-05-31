@@ -57,8 +57,14 @@ export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError>
     QueryFunctionContext<DataSourceKey, Partial<NoInfer<TRequest>>>
 > & {
     type: 'infinite';
-    next: (lastPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | null | undefined;
-    prev?: (firstPage: TResponse, allPages: TResponse[]) => Partial<TRequest> | null | undefined;
+    next: (
+        lastPage: NoInfer<TResponse>,
+        allPages: NoInfer<TResponse>[],
+    ) => Partial<NoInfer<TRequest>> | null | undefined;
+    prev?: (
+        firstPage: NoInfer<TResponse>,
+        allPages: NoInfer<TResponse>[],
+    ) => Partial<NoInfer<TRequest>> | null | undefined;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
