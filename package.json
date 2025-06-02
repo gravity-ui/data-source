@@ -1,6 +1,6 @@
 {
   "name": "@gravity-ui/data-source",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "A wrapper around data fetching",
   "keywords": [
     "data-fetching",
