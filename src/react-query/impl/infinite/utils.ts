@@ -36,7 +36,7 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
     DataSourceKey,
     AnyPageParam
 > => {
-    const {transformParams, transformError, transformResponse, next, prev} = dataSource;
+    const {transformParams, transformResponse, next, prev} = dataSource;
 
     const queryFn = async (
         fetchContext: QueryFunctionContext<DataSourceKey, AnyPageParam>,
@@ -44,17 +44,9 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
         const request = transformParams ? transformParams(params) : params;
         const paginatedRequest = {...request, ...fetchContext.pageParam};
 
-        try {
-            const response = await dataSource.fetch(context, fetchContext, paginatedRequest);
+        const response = await dataSource.fetch(context, fetchContext, paginatedRequest);
 
-            return formatNullableValue(response);
-        } catch (error) {
-            if (!transformError) {
-                throw error;
-            }
-
-            return formatNullableValue(transformError(error));
-        }
+        return formatNullableValue(response);
     };
 
     const selectPage = (

@@ -9,13 +9,11 @@ export type {
     DataSourceResponse,
     DataSourceData,
     DataSourceError,
-    DataSourceErrorResponse,
     DataSourceOptions,
     DataSourceState,
     DataSourceFetchContext,
     ActualParams,
     ActualData,
-    ActualResponse,
 } from './types/DataSource';
 export type {DataManager} from './types/DataManager';
 export type {DataLoaderStatus} from './types/DataLoaderStatus';
