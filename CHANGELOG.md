@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/gravity-ui/data-source/compare/v0.6.1...v0.7.0) (2025-06-02)
+
+
+### Features
+
+* add the withCatch function ([#34](https://github.com/gravity-ui/data-source/issues/34)) ([85ac92c](https://github.com/gravity-ui/data-source/commit/85ac92c4cb55b92c10af99a9d1f4cf75fb9739fe))
+* remove the transformError ([#36](https://github.com/gravity-ui/data-source/issues/36)) ([01e2e9a](https://github.com/gravity-ui/data-source/commit/01e2e9a6e6af7c9e06d99add06c6db55646552cb))
+
 ## [0.6.1](https://github.com/gravity-ui/data-source/compare/v0.6.0...v0.6.1) (2025-03-25)
 
 
