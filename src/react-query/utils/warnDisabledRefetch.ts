@@ -1,3 +1,5 @@
+import {warn} from './warn';
+
 export const warnDisabledRefetch = () => {
-    console.warn('Disabled refetch is called');
+    warn('Disabled refetch is called');
 };
