@@ -1,6 +1,6 @@
 import {useMemo} from 'react';
 
-import {useInfiniteQuery} from '@tanstack/react-query';
+import {skipToken, useInfiniteQuery} from '@tanstack/react-query';
 import type {InfiniteData, InfiniteQueryObserverOptions} from '@tanstack/react-query';
 
 import type {
@@ -16,6 +16,7 @@ import type {
 } from '../../../core';
 import {useRefetchInterval} from '../../hooks/useRefetchInterval';
 import {normalizeStatus} from '../../utils/normalizeStatus';
+import {warnDisabledRefetch} from '../../utils/warnDisabledRefetch';
 
 import type {AnyInfiniteQueryDataSource, InfiniteQueryObserverExtendedOptions} from './types';
 import {composeOptions} from './utils';
@@ -63,11 +64,14 @@ export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSou
         [state.data],
     );
 
+    const isDisabled = composedOptions.enabled === false || composedOptions.queryFn === skipToken;
+
     return {
         ...state,
         status: normalizeStatus(state.status, state.fetchStatus),
         data: transformedData,
         originalStatus: state.status,
         originalData: state.data,
+        refetch: isDisabled ? warnDisabledRefetch : state.refetch,
     } as DataSourceState<TDataSource>;
 };
