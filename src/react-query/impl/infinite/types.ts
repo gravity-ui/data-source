@@ -26,8 +26,7 @@ export type InfiniteQueryObserverExtendedOptions<
         TError,
         InfiniteData<TQueryData, TPageParam>,
         TQueryKey
-    >
->;
+    >;
 
 export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
     QueryDataSourceContext,
