@@ -9,7 +9,7 @@ import type {Overwrite} from 'utility-types';
 
 import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
 import type {QueryDataSourceContext} from '../../types/base';
-import type {QueryDataAdditionalOptions} from '../../types/options';
+import type {QueryCustomOptions, QueryDataAdditionalOptions} from '../../types/options';
 
 export type QueryObserverExtendedOptions<
     TQueryFnData = unknown,
@@ -18,8 +18,11 @@ export type QueryObserverExtendedOptions<
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
     TPageParam = never,
-> = QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam> &
-    QueryDataAdditionalOptions<TQueryFnData, TError, TQueryData, TQueryKey>;
+> = Overwrite<
+    QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
+    QueryDataAdditionalOptions<TQueryFnData, TError, TQueryData, TQueryKey>
+> &
+    QueryCustomOptions;
 
 export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
     QueryDataSourceContext,
