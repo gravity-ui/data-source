@@ -39,6 +39,20 @@ function App() {
 }
 ```
 
+Или используйте упрощенный `DataSourceProvider` (рекомендуется):
+
+```tsx
+import {ClientDataManager, DataSourceProvider} from '@gravity-ui/data-source';
+
+function App() {
+  return (
+    <DataSourceProvider dataManager={dataManager}>
+      <YourApplication />
+    </DataSourceProvider>
+  );
+}
+```
+
 ### 2. Определение типов ошибок и оберток
 
 Определите тип ошибки и создайте свои конструкторы для источников данных на основе стандартных конструкторов:
@@ -763,6 +777,273 @@ const UserProfile: React.FC<{userId: number}> = ({userId}) => {
   );
 };
 ```
+
+## Нормализация данных
+
+Data Source предоставляет встроенную нормализацию данных с использованием [@normy/core](https://github.com/klis87/normy). Нормализация помогает управлять реляционными данными, храня сущности по их ID и автоматически обновляя все связанные запросы при изменении данных.
+
+### Зачем нужна нормализация?
+
+Без нормализации одна и та же сущность может дублироваться в нескольких запросах. Когда вы обновляете эту сущность в одном месте, другие запросы остаются устаревшими до повторной загрузки. Нормализация решает эту проблему:
+
+1. **Хранение сущностей один раз** - Каждая сущность хранится по её ID в нормализованном хранилище
+2. **Автоматические обновления** - При изменении сущности все запросы, использующие её, автоматически обновляются
+3. **Консистентность** - Ваш UI всегда отображает актуальные данные во всех компонентах
+4. **Экономия памяти** - Нет дублирования одних и тех же данных
+
+### Настройка с DataSourceProvider
+
+Самый простой способ включить нормализацию - использовать `DataSourceProvider`:
+
+```tsx
+import {ClientDataManager, DataSourceProvider} from '@gravity-ui/data-source';
+
+const dataManager = new ClientDataManager({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
+
+function App() {
+  return (
+    <DataSourceProvider
+      dataManager={dataManager}
+      normalizerConfig={{
+        normalize: true, // Включить нормализацию глобально
+        // Опционально: настройки @normy/core
+        structuralSharing: true,
+      }}
+      optimisticUpdateConfig={{
+        enabled: true, // Включить оптимистичные обновления
+        autoCalculateRollback: true, // Автоматически рассчитывать данные для отката
+        devLogging: false, // Включить debug логирование в разработке
+      }}
+    >
+      <YourApplication />
+    </DataSourceProvider>
+  );
+}
+```
+
+`DataSourceProvider` - это удобная обертка, которая объединяет:
+
+- `QueryNormalizerProvider` - Обрабатывает нормализацию данных
+- `QueryClientProvider` - Провайдер React Query
+- `DataManagerContext.Provider` - Контекст Data Source
+
+### Ручная настройка с QueryNormalizerProvider
+
+Для большего контроля можно настроить провайдеры вручную:
+
+```tsx
+import {QueryClientProvider} from '@tanstack/react-query';
+import {
+  ClientDataManager,
+  DataManagerContext,
+  QueryNormalizerProvider,
+} from '@gravity-ui/data-source';
+
+function App() {
+  return (
+    <QueryNormalizerProvider
+      queryClient={dataManager.queryClient}
+      normalizerConfig={{normalize: true}}
+      optimisticUpdateConfig={{enabled: true}}
+    >
+      <QueryClientProvider client={dataManager.queryClient}>
+        <DataManagerContext.Provider value={dataManager}>
+          <YourApplication />
+        </DataManagerContext.Provider>
+      </QueryClientProvider>
+    </QueryNormalizerProvider>
+  );
+}
+```
+
+### Настройка источников данных для нормализации
+
+Вы можете включать/выключать нормализацию для конкретного источника данных или запроса:
+
+```ts
+const userDataSource = makePlainQueryDataSource({
+  name: 'user',
+  fetch: skipContext(fetchUser),
+  options: {
+    normalizationConfig: {
+      normalize: true, // Переопределить глобальную настройку для этого источника
+    },
+  },
+});
+
+// В компоненте - переопределить для конкретного запроса
+const {data} = useQueryData(
+  userDataSource,
+  {userId: 123},
+  {
+    normalizationConfig: {
+      normalize: false, // Отключить нормализацию для этого конкретного запроса
+    },
+  },
+);
+```
+
+### Оптимистичные обновления
+
+Оптимистичные обновления позволяют обновить UI немедленно до ответа сервера, обеспечивая мгновенную обратную связь:
+
+```tsx
+import {useMutation} from '@tanstack/react-query';
+import {useQueryNormalizer} from '@gravity-ui/data-source';
+
+function UserProfile() {
+  const queryNormalizer = useQueryNormalizer();
+
+  const mutation = useMutation({
+    mutationFn: updateUser,
+    onMutate: async (newUser) => {
+      // Вернуть оптимистичные данные, которые будут автоматически применены
+      return {
+        optimisticData: {
+          users: {
+            [newUser.id]: newUser,
+          },
+        },
+      };
+    },
+    // Откат рассчитывается автоматически если autoCalculateRollback: true
+    // Иначе вы можете предоставить его вручную:
+    onMutate: async (newUser) => {
+      const currentUser = queryNormalizer.getObjectById('users', newUser.id);
+      return {
+        optimisticData: {
+          users: {[newUser.id]: newUser},
+        },
+        rollbackData: {
+          users: {[newUser.id]: currentUser},
+        },
+      };
+    },
+    // Настройка для конкретной мутации
+    optimisticUpdateConfig: {
+      enabled: true,
+      devLogging: true,
+    },
+  });
+}
+```
+
+### Работа с нормализованными данными
+
+`QueryNormalizerProvider` предоставляет хук `useQueryNormalizer` с вспомогательными методами:
+
+```tsx
+import {useQueryNormalizer} from '@gravity-ui/data-source';
+
+function MyComponent() {
+  const queryNormalizer = useQueryNormalizer();
+
+  // Получить все нормализованные данные
+  const normalizedData = queryNormalizer.getNormalizedData();
+
+  // Получить конкретную сущность по ID
+  const user = queryNormalizer.getObjectById('users', '123');
+
+  // Получить фрагмент данных
+  const fragment = queryNormalizer.getQueryFragment({
+    users: {
+      '123': {id: true, name: true},
+    },
+  });
+
+  // Найти запросы, зависящие от конкретных данных
+  const dependentQueries = queryNormalizer.getDependentQueries({
+    users: {
+      '123': {id: '123', name: 'Updated Name'},
+    },
+  });
+
+  // Найти запросы по ID сущностей
+  const queries = queryNormalizer.getDependentQueriesByIds(['users.123', 'posts.456']);
+
+  // Вручную обновить нормализованные данные (например, из WebSocket)
+  queryNormalizer.setNormalizedData({
+    users: {
+      '123': {id: '123', name: 'Real-time Update'},
+    },
+  });
+
+  // Очистить все нормализованные данные
+  queryNormalizer.clear();
+}
+```
+
+### Пример real-time обновлений
+
+Нормализация отлично работает с WebSocket или другими real-time обновлениями:
+
+```tsx
+import {useEffect} from 'react';
+import {useQueryNormalizer} from '@gravity-ui/data-source';
+
+function useWebSocketUpdates() {
+  const queryNormalizer = useQueryNormalizer();
+
+  useEffect(() => {
+    const ws = new WebSocket('wss://api.example.com/updates');
+
+    ws.onmessage = (event) => {
+      const update = JSON.parse(event.data);
+
+      // Автоматически обновляет все запросы, использующие эти данные
+      queryNormalizer.setNormalizedData(update);
+    };
+
+    return () => ws.close();
+  }, [queryNormalizer]);
+}
+```
+
+### Справочник по конфигурации
+
+#### NormalizerConfig
+
+```ts
+interface DataSourceNormalizerConfig {
+  /** Включена ли нормализация, по умолчанию false */
+  normalize?: boolean;
+
+  // Опции конфигурации @normy/core:
+  /** Использовать ли структурное разделение для обновлений */
+  structuralSharing?: boolean;
+  /** Пользовательские схемы нормализации */
+  schemas?: Record<string, NormalizationSchema>;
+  /** Пользовательское имя поля ID (по умолчанию: 'id') */
+  idAttribute?: string;
+}
+```
+
+#### OptimisticUpdateConfig
+
+```ts
+interface OptimisticUpdateConfig {
+  /** Включена ли оптимистичная синхронизация, по умолчанию false. Внимание: не будет работать без нормализации */
+  enabled?: boolean;
+  /** Автоматически рассчитывать данные для отката, по умолчанию true */
+  autoCalculateRollback?: boolean;
+  /** Включено ли debug логирование */
+  devLogging?: boolean;
+}
+```
+
+### Лучшие практики
+
+1. **Включайте глобально, отключайте выборочно** - Включите нормализацию на уровне провайдера, отключайте только для конкретных запросов, которым она не нужна
+2. **Используйте консистентные структуры сущностей** - Убедитесь, что ваш API возвращает сущности с консистентными полями ID
+3. **Используйте оптимистичные обновления** - Для лучшего UX используйте оптимистичные обновления с автоматическим откатом
+4. **Мониторьте в разработке** - Включите `devLogging` во время разработки, чтобы понимать поведение нормализации
+5. **Комбинируйте с тегами** - Используйте и нормализацию, и теги для комплексного управления кешем
 
 ## Поддержка TypeScript
 

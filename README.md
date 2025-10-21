@@ -39,6 +39,20 @@ function App() {
 }
 ```
 
+Or use the simplified `DataSourceProvider` (recommended):
+
+```tsx
+import {ClientDataManager, DataSourceProvider} from '@gravity-ui/data-source';
+
+function App() {
+  return (
+    <DataSourceProvider dataManager={dataManager}>
+      <YourApplication />
+    </DataSourceProvider>
+  );
+}
+```
+
 ### 2. Define Error Types and Wrappers
 
 Define a type of error and make your constructors for data sources based on default constructors:
@@ -763,6 +777,273 @@ const UserProfile: React.FC<{userId: number}> = ({userId}) => {
   );
 };
 ```
+
+## Data Normalization
+
+Data Source provides built-in data normalization using [@normy/core](https://github.com/klis87/normy). Normalization helps manage relational data by storing entities by their IDs and automatically updating all related queries when data changes.
+
+### Why Normalization?
+
+Without normalization, the same entity might be duplicated across multiple queries. When you update this entity in one place, other queries remain outdated until they refetch. Normalization solves this by:
+
+1. **Storing entities once** - Each entity is stored by its ID in a normalized store
+2. **Automatic updates** - When an entity changes, all queries using it are automatically updated
+3. **Consistency** - Your UI always shows the latest data across all components
+4. **Reduced memory** - No duplication of the same data
+
+### Setup with DataSourceProvider
+
+The simplest way to enable normalization is to use `DataSourceProvider`:
+
+```tsx
+import {ClientDataManager, DataSourceProvider} from '@gravity-ui/data-source';
+
+const dataManager = new ClientDataManager({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
+
+function App() {
+  return (
+    <DataSourceProvider
+      dataManager={dataManager}
+      normalizerConfig={{
+        normalize: true, // Enable normalization globally
+        // Optional: configure @normy/core settings
+        structuralSharing: true,
+      }}
+      optimisticUpdateConfig={{
+        enabled: true, // Enable optimistic updates
+        autoCalculateRollback: true, // Automatically calculate rollback data
+        devLogging: false, // Enable debug logging in development
+      }}
+    >
+      <YourApplication />
+    </DataSourceProvider>
+  );
+}
+```
+
+`DataSourceProvider` is a convenient wrapper that combines:
+
+- `QueryNormalizerProvider` - Handles data normalization
+- `QueryClientProvider` - React Query provider
+- `DataManagerContext.Provider` - Data Source context
+
+### Manual Setup with QueryNormalizerProvider
+
+For more control, you can set up providers manually:
+
+```tsx
+import {QueryClientProvider} from '@tanstack/react-query';
+import {
+  ClientDataManager,
+  DataManagerContext,
+  QueryNormalizerProvider,
+} from '@gravity-ui/data-source';
+
+function App() {
+  return (
+    <QueryNormalizerProvider
+      queryClient={dataManager.queryClient}
+      normalizerConfig={{normalize: true}}
+      optimisticUpdateConfig={{enabled: true}}
+    >
+      <QueryClientProvider client={dataManager.queryClient}>
+        <DataManagerContext.Provider value={dataManager}>
+          <YourApplication />
+        </DataManagerContext.Provider>
+      </QueryClientProvider>
+    </QueryNormalizerProvider>
+  );
+}
+```
+
+### Configuring Data Sources for Normalization
+
+You can enable/disable normalization per data source or per query:
+
+```ts
+const userDataSource = makePlainQueryDataSource({
+  name: 'user',
+  fetch: skipContext(fetchUser),
+  options: {
+    normalizationConfig: {
+      normalize: true, // Override global setting for this data source
+    },
+  },
+});
+
+// In component - override for specific query
+const {data} = useQueryData(
+  userDataSource,
+  {userId: 123},
+  {
+    normalizationConfig: {
+      normalize: false, // Disable normalization for this specific query
+    },
+  },
+);
+```
+
+### Optimistic Updates
+
+Optimistic updates allow you to update the UI immediately before the server responds, providing instant feedback:
+
+```tsx
+import {useMutation} from '@tanstack/react-query';
+import {useQueryNormalizer} from '@gravity-ui/data-source';
+
+function UserProfile() {
+  const queryNormalizer = useQueryNormalizer();
+
+  const mutation = useMutation({
+    mutationFn: updateUser,
+    onMutate: async (newUser) => {
+      // Return optimistic data that will be automatically applied
+      return {
+        optimisticData: {
+          users: {
+            [newUser.id]: newUser,
+          },
+        },
+      };
+    },
+    // Rollback is calculated automatically if autoCalculateRollback: true
+    // Otherwise you can provide it manually:
+    onMutate: async (newUser) => {
+      const currentUser = queryNormalizer.getObjectById('users', newUser.id);
+      return {
+        optimisticData: {
+          users: {[newUser.id]: newUser},
+        },
+        rollbackData: {
+          users: {[newUser.id]: currentUser},
+        },
+      };
+    },
+    // Configure per mutation
+    optimisticUpdateConfig: {
+      enabled: true,
+      devLogging: true,
+    },
+  });
+}
+```
+
+### Working with Normalized Data
+
+The `QueryNormalizerProvider` provides a `useQueryNormalizer` hook with utility methods:
+
+```tsx
+import {useQueryNormalizer} from '@gravity-ui/data-source';
+
+function MyComponent() {
+  const queryNormalizer = useQueryNormalizer();
+
+  // Get all normalized data
+  const normalizedData = queryNormalizer.getNormalizedData();
+
+  // Get specific entity by ID
+  const user = queryNormalizer.getObjectById('users', '123');
+
+  // Get data fragment
+  const fragment = queryNormalizer.getQueryFragment({
+    users: {
+      '123': {id: true, name: true},
+    },
+  });
+
+  // Find which queries depend on specific data
+  const dependentQueries = queryNormalizer.getDependentQueries({
+    users: {
+      '123': {id: '123', name: 'Updated Name'},
+    },
+  });
+
+  // Find queries by entity IDs
+  const queries = queryNormalizer.getDependentQueriesByIds(['users.123', 'posts.456']);
+
+  // Manually update normalized data (e.g., from WebSocket)
+  queryNormalizer.setNormalizedData({
+    users: {
+      '123': {id: '123', name: 'Real-time Update'},
+    },
+  });
+
+  // Clear all normalized data
+  queryNormalizer.clear();
+}
+```
+
+### Real-time Updates Example
+
+Normalization works great with WebSocket or other real-time updates:
+
+```tsx
+import {useEffect} from 'react';
+import {useQueryNormalizer} from '@gravity-ui/data-source';
+
+function useWebSocketUpdates() {
+  const queryNormalizer = useQueryNormalizer();
+
+  useEffect(() => {
+    const ws = new WebSocket('wss://api.example.com/updates');
+
+    ws.onmessage = (event) => {
+      const update = JSON.parse(event.data);
+
+      // Automatically updates all queries that use this data
+      queryNormalizer.setNormalizedData(update);
+    };
+
+    return () => ws.close();
+  }, [queryNormalizer]);
+}
+```
+
+### Configuration Reference
+
+#### NormalizerConfig
+
+```ts
+interface DataSourceNormalizerConfig {
+  /** Whether normalization is enabled, defaults to false */
+  normalize?: boolean;
+
+  // @normy/core configuration options:
+  /** Whether to use structural sharing for updates */
+  structuralSharing?: boolean;
+  /** Custom normalization schemas */
+  schemas?: Record<string, NormalizationSchema>;
+  /** Custom ID field name (default: 'id') */
+  idAttribute?: string;
+}
+```
+
+#### OptimisticUpdateConfig
+
+```ts
+interface OptimisticUpdateConfig {
+  /** Whether optimistic synchronization is enabled, defaults to false. Note: won't work without normalization */
+  enabled?: boolean;
+  /** Automatically calculate rollback data, defaults to true */
+  autoCalculateRollback?: boolean;
+  /** Whether debug logging is enabled */
+  devLogging?: boolean;
+}
+```
+
+### Best Practices
+
+1. **Enable globally, disable selectively** - Enable normalization at the provider level, disable only for specific queries that don't need it
+2. **Use consistent entity structures** - Ensure your API returns entities with consistent ID fields
+3. **Leverage optimistic updates** - For better UX, use optimistic updates with automatic rollback
+4. **Monitor in development** - Enable `devLogging` during development to understand normalization behavior
+5. **Combine with tags** - Use both normalization and tags for comprehensive cache management
 
 ## TypeScript Support
 

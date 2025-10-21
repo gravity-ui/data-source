@@ -18,10 +18,8 @@ export type QueryObserverExtendedOptions<
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
     TPageParam = never,
-> = Overwrite<
-    QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
-    QueryDataAdditionalOptions<TQueryFnData, TError, TQueryData, TQueryKey>
->;
+> = QueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam> &
+    QueryDataAdditionalOptions<TQueryFnData, TError, TQueryData, TQueryKey>;
 
 export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
     QueryDataSourceContext,

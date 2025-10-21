@@ -21,3 +21,14 @@ export {getProgressiveRefetch} from './utils/getProgressiveRefetch';
 
 export type {ClientDataManagerConfig} from './ClientDataManager';
 export {ClientDataManager} from './ClientDataManager';
+
+export {DataSourceProvider} from './DataSourceProvider';
+
+export {updateQueriesFromMutationData} from './normalize/normalization';
+export {QueryNormalizerProvider, useQueryNormalizer} from './normalize/QueryNormalizerProvider';
+export type {
+    OptimisticUpdateConfig,
+    DataSourceNormalizerConfig,
+    OptionsNormalizerConfig,
+    Normalizer,
+} from './types/normalizer';

@@ -19,15 +19,13 @@ export type InfiniteQueryObserverExtendedOptions<
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
     TPageParam = unknown,
-> = Overwrite<
-    InfiniteQueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
+> = InfiniteQueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam> &
     QueryDataAdditionalOptions<
         TQueryFnData,
         TError,
         InfiniteData<TQueryData, TPageParam>,
         TQueryKey
-    >
->;
+    >;
 
 export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError> = DataSource<
     QueryDataSourceContext,
