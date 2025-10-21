@@ -11,10 +11,6 @@ export interface QueryDataAdditionalOptions<
     TQueryKey extends QueryKey = QueryKey,
 > {
     refetchInterval?: RefetchInterval<TQueryFnData, TError, TQueryData, TQueryKey>;
-    /** Конфигурация нормализации (включение/выключение) */
-    normalizationConfig?: OptionsNormalizerConfig;
-    /** Конфигурация оптимистического обновления данных */
-    optimisticUpdateConfig?: OptimisticUpdateConfig;
     /**
      * @deprecated The use of the enabled option is deprecated.
      * It is recommended to use idle as query parameters to control query state.
@@ -26,4 +22,11 @@ export interface QueryDataAdditionalOptions<
     optimistic?: boolean | OptimisticConfig;
     /** Invalidate data configuration */
     invalidate?: boolean;
+}
+
+export interface QueryCustomOptions {
+    /** Normalization configuration (enable/disable) */
+    normalizationConfig?: OptionsNormalizerConfig;
+    /** Optimistic data update configuration */
+    optimisticUpdateConfig?: OptimisticUpdateConfig;
 }
