@@ -27,7 +27,7 @@ export class ClientDataManager implements DataManager {
     readonly normalizer?: Normalizer | undefined;
     readonly queryNormalizer?: QueryNormalizer | undefined;
 
-    constructor(config: ClientDataManagerConfig = {}) {
+    constructor(config: ClientDataManagerConfig = {}, normalizerConfig?: NormalizerClientConfig) {
         this.queryClient = new QueryClient({
             ...config,
             defaultOptions: {
@@ -62,7 +62,6 @@ export class ClientDataManager implements DataManager {
 
         queriesToUpdate.forEach((query) => {
             const queryKey = JSON.parse(query.queryKey) as QueryKey;
-
             const cachedQuery = this.queryClient.getQueryCache().find({queryKey});
 
             const dataUpdatedAt = cachedQuery?.state.dataUpdatedAt;

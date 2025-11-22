@@ -417,18 +417,58 @@ const MyComponent = withDataManager<Props>(({dataManager, ...props}) => {
 Основной класс для управления данными.
 
 ```ts
-const dataManager = new ClientDataManager({
-  defaultOptions: {
-    queries: {
-      staleTime: 300000, // 5 минут
-      retry: 3,
-      refetchOnWindowFocus: false,
+const dataManager = new ClientDataManager(
+  {
+    defaultOptions: {
+      queries: {
+        staleTime: 300000, // 5 минут
+        retry: 3,
+        refetchOnWindowFocus: false,
+      },
     },
   },
+  // Опционально: второй параметр для включения нормализации
+  {
+    normalizerConfig: {
+      devLogging: false,
+    },
+  },
+);
+
+// Доступ к нормализатору, если включен
+if (dataManager.normalizer) {
+  const data = dataManager.normalizer.getNormalizedData();
+}
+```
+
+**Свойства:**
+
+- `queryClient` - Экземпляр React Query клиента
+- `normalizer` - Экземпляр нормализатора (если нормализация включена)
+
+**Методы:**
+
+##### `optimisticUpdate(mutationData)`
+
+Применяет оптимистичные обновления к нормализованным данным. Все запросы, использующие обновленные сущности, будут автоматически обновлены.
+
+```ts
+dataManager.optimisticUpdate({
+  id: '123',
+  name: 'Обновленное имя',
 });
 ```
 
-**Методы:**
+##### `automaticInvalidate(data)`
+
+Инвалидирует запросы на основе нормализованных данных. Полезно для инвалидации кеша, управляемой сервером.
+
+```ts
+dataManager.automaticInvalidate({
+  id: '123',
+  name: 'Новое имя',
+});
+```
 
 ##### `invalidateTag(tag, options?)`
 
@@ -798,13 +838,22 @@ Data Source предоставляет встроенную нормализац
 ```tsx
 import {ClientDataManager, DataSourceProvider} from '@gravity-ui/data-source';
 
-const dataManager = new ClientDataManager({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
+// Создайте DataManager с включенной нормализацией
+const dataManager = new ClientDataManager(
+  {
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000,
+      },
     },
   },
-});
+  // Включите нормализацию в ClientDataManager
+  {
+    normalizerConfig: {
+      devLogging: false,
+    },
+  },
+);
 
 function App() {
   return (
@@ -845,10 +894,20 @@ import {
   QueryNormalizerProvider,
 } from '@gravity-ui/data-source';
 
+// Создайте DataManager с нормализацией
+const dataManager = new ClientDataManager(
+  {
+    defaultOptions: {
+      queries: {staleTime: 5 * 60 * 1000},
+    },
+  },
+  {normalizerConfig: {devLogging: false}},
+);
+
 function App() {
   return (
     <QueryNormalizerProvider
-      queryClient={dataManager.queryClient}
+      dataManager={dataManager}
       normalizerConfig={{normalize: true}}
       optimisticUpdateConfig={{enabled: true}}
     >
@@ -895,34 +954,26 @@ const {data} = useQueryData(
 
 ```tsx
 import {useMutation} from '@tanstack/react-query';
-import {useQueryNormalizer} from '@gravity-ui/data-source';
+import {useDataManager} from '@gravity-ui/data-source';
 
 function UserProfile() {
-  const queryNormalizer = useQueryNormalizer();
+  const dataManager = useDataManager();
 
   const mutation = useMutation({
     mutationFn: updateUser,
     onMutate: async (newUser) => {
       // Вернуть оптимистичные данные, которые будут автоматически применены
       return {
-        optimisticData: {
-          users: {
-            [newUser.id]: newUser,
-          },
-        },
+        optimisticData: {id: newUser.id, name: newUser.name},
       };
     },
     // Откат рассчитывается автоматически если autoCalculateRollback: true
     // Иначе вы можете предоставить его вручную:
     onMutate: async (newUser) => {
-      const currentUser = queryNormalizer.getObjectById('users', newUser.id);
+      const currentUser = dataManager.normalizer?.getObjectById(newUser.id);
       return {
-        optimisticData: {
-          users: {[newUser.id]: newUser},
-        },
-        rollbackData: {
-          users: {[newUser.id]: currentUser},
-        },
+        optimisticData: {id: newUser.id, name: newUser.name},
+        rollbackData: currentUser,
       };
     },
     // Настройка для конкретной мутации
@@ -948,34 +999,49 @@ function MyComponent() {
   const normalizedData = queryNormalizer.getNormalizedData();
 
   // Получить конкретную сущность по ID
-  const user = queryNormalizer.getObjectById('users', '123');
+  const user = queryNormalizer.getObjectById('123');
 
   // Получить фрагмент данных
   const fragment = queryNormalizer.getQueryFragment({
-    users: {
-      '123': {id: true, name: true},
-    },
+    id: '123',
+    name: true,
   });
 
   // Найти запросы, зависящие от конкретных данных
   const dependentQueries = queryNormalizer.getDependentQueries({
-    users: {
-      '123': {id: '123', name: 'Updated Name'},
-    },
+    id: '123',
+    name: 'Updated Name',
   });
 
   // Найти запросы по ID сущностей
-  const queries = queryNormalizer.getDependentQueriesByIds(['users.123', 'posts.456']);
+  const queries = queryNormalizer.getDependentQueriesByIds(['123', '456']);
 
   // Вручную обновить нормализованные данные (например, из WebSocket)
   queryNormalizer.setNormalizedData({
-    users: {
-      '123': {id: '123', name: 'Real-time Update'},
-    },
+    id: '123',
+    name: 'Real-time Update',
   });
 
   // Очистить все нормализованные данные
   queryNormalizer.clear();
+}
+```
+
+Вы также можете использовать `dataManager` напрямую для оптимистичных обновлений:
+
+```tsx
+import {useDataManager} from '@gravity-ui/data-source';
+
+function MyComponent() {
+  const dataManager = useDataManager();
+
+  const handleUpdate = () => {
+    // Применить оптимистичное обновление через dataManager
+    dataManager.optimisticUpdate({
+      id: '123',
+      name: 'Обновленное имя',
+    });
+  };
 }
 ```
 
@@ -985,10 +1051,10 @@ function MyComponent() {
 
 ```tsx
 import {useEffect} from 'react';
-import {useQueryNormalizer} from '@gravity-ui/data-source';
+import {useDataManager} from '@gravity-ui/data-source';
 
 function useWebSocketUpdates() {
-  const queryNormalizer = useQueryNormalizer();
+  const dataManager = useDataManager();
 
   useEffect(() => {
     const ws = new WebSocket('wss://api.example.com/updates');
@@ -997,11 +1063,30 @@ function useWebSocketUpdates() {
       const update = JSON.parse(event.data);
 
       // Автоматически обновляет все запросы, использующие эти данные
-      queryNormalizer.setNormalizedData(update);
+      dataManager.optimisticUpdate(update);
     };
 
     return () => ws.close();
-  }, [queryNormalizer]);
+  }, [dataManager]);
+}
+```
+
+Вы также можете использовать `useQueryNormalizer` для более продвинутых сценариев:
+
+```tsx
+import {useQueryNormalizer} from '@gravity-ui/data-source';
+
+function useAdvancedNormalization() {
+  const queryNormalizer = useQueryNormalizer();
+
+  // Получить конкретную сущность по ID
+  const user = queryNormalizer.getObjectById('123');
+
+  // Найти зависимые запросы перед обновлением
+  const dependentQueries = queryNormalizer.getDependentQueries({id: '123'});
+
+  // Обновить данные
+  queryNormalizer.setNormalizedData({id: '123', name: 'Новое имя'});
 }
 ```
 

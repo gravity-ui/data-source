@@ -1,31 +1,33 @@
 import React from 'react';
 
-import {createNormalizer} from '@normy/core';
-import {QueryClient, QueryClientProvider, useMutation} from '@tanstack/react-query';
+import {QueryClientProvider, useMutation} from '@tanstack/react-query';
 import {renderHook, waitFor} from '@testing-library/react';
 
+import {ClientDataManager} from '../../ClientDataManager';
 import type {DataSourceNormalizerConfig, OptimisticUpdateConfig} from '../../types/normalizer';
 import {createQueryNormalizer} from '../normalization';
 
 describe('subscriptions', () => {
-    let queryClient: QueryClient;
-    let normalizer: ReturnType<typeof createNormalizer>;
+    let dataManager: ClientDataManager;
 
     beforeEach(() => {
-        queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {retry: false},
-                mutations: {retry: false},
+        dataManager = new ClientDataManager(
+            {
+                defaultOptions: {
+                    queries: {retry: false},
+                    mutations: {retry: false},
+                },
             },
-        });
-
-        normalizer = createNormalizer({
-            devLogging: false,
-        });
+            {
+                normalizerConfig: {
+                    devLogging: false,
+                },
+            },
+        );
     });
 
     afterEach(() => {
-        queryClient.clear();
+        dataManager.queryClient.clear();
     });
 
     describe('QueryCache subscription', () => {
@@ -38,9 +40,14 @@ describe('subscriptions', () => {
         };
 
         it('should add query to normalizer when added to QueryCache', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig,
             });
@@ -48,7 +55,7 @@ describe('subscriptions', () => {
             queryNormalizer.subscribe();
 
             // Add query
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey: ['users'],
                 queryFn: async () => [{id: '1', name: 'User 1'}],
             });
@@ -60,9 +67,14 @@ describe('subscriptions', () => {
         });
 
         it('should update query in normalizer on update', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig,
             });
@@ -72,7 +84,7 @@ describe('subscriptions', () => {
             const queryKey = ['users'];
 
             // Initial data
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey,
                 queryFn: async () => [{id: '1', name: 'Old'}],
             });
@@ -81,7 +93,7 @@ describe('subscriptions', () => {
             const objectCountBefore = Object.keys(normalizedBefore.objects).length;
 
             // Update data
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey,
                 queryFn: async () => [{id: '1', name: 'New'}],
             });
@@ -95,9 +107,14 @@ describe('subscriptions', () => {
         });
 
         it('should remove query from normalizer when removed from QueryCache', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig,
             });
@@ -107,13 +124,13 @@ describe('subscriptions', () => {
             const queryKey = ['users'];
 
             // Add query
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey,
                 queryFn: async () => [{id: '1', name: 'User 1'}],
             });
 
             // Remove query
-            queryClient.removeQueries({queryKey});
+            dataManager.queryClient.removeQueries({queryKey});
 
             // Give time to process event
             await new Promise((resolve) => setTimeout(resolve, 10));
@@ -126,9 +143,14 @@ describe('subscriptions', () => {
         });
 
         it('should support meta configuration for queries', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig,
             });
@@ -146,9 +168,14 @@ describe('subscriptions', () => {
         });
 
         it('should unsubscribe correctly', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig,
             });
@@ -157,7 +184,7 @@ describe('subscriptions', () => {
             queryNormalizer.unsubscribe();
 
             // After unsubscribing, adding query should not affect normalizer
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey: ['users'],
                 queryFn: async () => [{id: '1', name: 'User 1'}],
             });
@@ -167,9 +194,14 @@ describe('subscriptions', () => {
         });
 
         it('should allow multiple unsubscribe calls', () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig,
             });
@@ -193,9 +225,14 @@ describe('subscriptions', () => {
         };
 
         it('should update queries on successful mutation', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig,
             });
@@ -205,14 +242,16 @@ describe('subscriptions', () => {
             const queryKey = ['users'];
 
             // Initial data
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey,
                 queryFn: async () => [{id: '1', name: 'Old'}],
             });
 
             // Create wrapper for hooks
             const wrapper = ({children}: {children: React.ReactNode}) => (
-                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+                <QueryClientProvider client={dataManager.queryClient}>
+                    {children}
+                </QueryClientProvider>
             );
 
             // Mutation via useMutation
@@ -228,16 +267,24 @@ describe('subscriptions', () => {
 
             await waitFor(() => expect(mutationResult.current.isSuccess).toBe(true));
 
-            const data = queryClient.getQueryData(queryKey) as Array<{id: string; name: string}>;
+            const data = dataManager.queryClient.getQueryData(queryKey) as Array<{
+                id: string;
+                name: string;
+            }>;
             expect(data[0].name).toBe('New');
 
             queryNormalizer.unsubscribe();
         });
 
         it('should apply optimistic updates', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig,
             });
@@ -247,13 +294,15 @@ describe('subscriptions', () => {
             const queryKey = ['users'];
 
             // Initial data
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey,
                 queryFn: async () => [{id: '1', name: 'Original'}],
             });
 
             const wrapper = ({children}: {children: React.ReactNode}) => (
-                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+                <QueryClientProvider client={dataManager.queryClient}>
+                    {children}
+                </QueryClientProvider>
             );
 
             // Mutation with optimistic data
@@ -275,7 +324,7 @@ describe('subscriptions', () => {
 
             // Check optimistic data
             await waitFor(() => {
-                const data = queryClient.getQueryData(queryKey) as Array<{
+                const data = dataManager.queryClient.getQueryData(queryKey) as Array<{
                     id: string;
                     name: string;
                 }>;
@@ -285,7 +334,7 @@ describe('subscriptions', () => {
             // Wait for mutation to complete
             await waitFor(() => expect(mutationResult.current.isSuccess).toBe(true));
 
-            const dataFinal = queryClient.getQueryData(queryKey) as Array<{
+            const dataFinal = dataManager.queryClient.getQueryData(queryKey) as Array<{
                 id: string;
                 name: string;
             }>;
@@ -295,9 +344,14 @@ describe('subscriptions', () => {
         });
 
         it('should automatically calculate rollbackData', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig: {
                     enabled: true,
@@ -310,13 +364,15 @@ describe('subscriptions', () => {
             const queryKey = ['users'];
 
             // Initial data
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey,
                 queryFn: async () => [{id: '1', name: 'Original'}],
             });
 
             const wrapper = ({children}: {children: React.ReactNode}) => (
-                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+                <QueryClientProvider client={dataManager.queryClient}>
+                    {children}
+                </QueryClientProvider>
             );
 
             // Mutation with optimistic data that will fail
@@ -339,16 +395,24 @@ describe('subscriptions', () => {
             await waitFor(() => expect(mutationResult.current.isError).toBe(true));
 
             // Data should be rolled back to original
-            const data = queryClient.getQueryData(queryKey) as Array<{id: string; name: string}>;
+            const data = dataManager.queryClient.getQueryData(queryKey) as Array<{
+                id: string;
+                name: string;
+            }>;
             expect(data[0].name).toBe('Original');
 
             queryNormalizer.unsubscribe();
         });
 
         it('should rollback changes on mutation error', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig,
             });
@@ -358,13 +422,15 @@ describe('subscriptions', () => {
             const queryKey = ['users'];
 
             // Initial data
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey,
                 queryFn: async () => [{id: '1', name: 'Original'}],
             });
 
             const wrapper = ({children}: {children: React.ReactNode}) => (
-                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+                <QueryClientProvider client={dataManager.queryClient}>
+                    {children}
+                </QueryClientProvider>
             );
 
             // Mutation with error
@@ -386,16 +452,24 @@ describe('subscriptions', () => {
 
             await waitFor(() => expect(mutationResult.current.isError).toBe(true));
 
-            const data = queryClient.getQueryData(queryKey) as Array<{id: string; name: string}>;
+            const data = dataManager.queryClient.getQueryData(queryKey) as Array<{
+                id: string;
+                name: string;
+            }>;
             expect(data[0].name).toBe('Original');
 
             queryNormalizer.unsubscribe();
         });
 
         it('should ignore mutations with normalize: false and optimistic: false', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig: {normalize: false}, // Globally disabled
                 optimisticUpdateConfig: {enabled: false},
             });
@@ -403,10 +477,12 @@ describe('subscriptions', () => {
             queryNormalizer.subscribe();
 
             const queryKey = ['users'];
-            queryClient.setQueryData(queryKey, [{id: '1', name: 'Original'}]);
+            dataManager.queryClient.setQueryData(queryKey, [{id: '1', name: 'Original'}]);
 
             const wrapper = ({children}: {children: React.ReactNode}) => (
-                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+                <QueryClientProvider client={dataManager.queryClient}>
+                    {children}
+                </QueryClientProvider>
             );
 
             // Mutation should not update data automatically
@@ -422,18 +498,26 @@ describe('subscriptions', () => {
 
             await waitFor(() => expect(mutationResult.current.isSuccess).toBe(true));
 
-            const data = queryClient.getQueryData(queryKey) as Array<{id: string; name: string}>;
+            const data = dataManager.queryClient.getQueryData(queryKey) as Array<{
+                id: string;
+                name: string;
+            }>;
             expect(data[0].name).toBe('Original'); // Not changed
 
             queryNormalizer.unsubscribe();
         });
 
         it('should support devLogging for optimistic updates', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig: {
                     enabled: true,
@@ -446,13 +530,15 @@ describe('subscriptions', () => {
 
             const queryKey = ['users'];
 
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey,
                 queryFn: async () => [{id: '1', name: 'Original'}],
             });
 
             const wrapper = ({children}: {children: React.ReactNode}) => (
-                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+                <QueryClientProvider client={dataManager.queryClient}>
+                    {children}
+                </QueryClientProvider>
             );
 
             const {result: mutationResult} = renderHook(
@@ -485,9 +571,14 @@ describe('subscriptions', () => {
         });
 
         it('should support manual rollbackData', async () => {
+            if (!dataManager.normalizer) {
+                throw new Error('Normalizer should be initialized');
+            }
+
             const queryNormalizer = createQueryNormalizer({
-                queryClient,
-                normalizer,
+                queryClient: dataManager.queryClient,
+                normalizer: dataManager.normalizer,
+                optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
                 normalizerConfig,
                 optimisticUpdateConfig: {
                     enabled: true,
@@ -499,13 +590,15 @@ describe('subscriptions', () => {
 
             const queryKey = ['users'];
 
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey,
                 queryFn: async () => [{id: '1', name: 'Original'}],
             });
 
             const wrapper = ({children}: {children: React.ReactNode}) => (
-                <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+                <QueryClientProvider client={dataManager.queryClient}>
+                    {children}
+                </QueryClientProvider>
             );
 
             const {result: mutationResult} = renderHook(
@@ -527,7 +620,10 @@ describe('subscriptions', () => {
 
             await waitFor(() => expect(mutationResult.current.isError).toBe(true));
 
-            const data = queryClient.getQueryData(queryKey) as Array<{id: string; name: string}>;
+            const data = dataManager.queryClient.getQueryData(queryKey) as Array<{
+                id: string;
+                name: string;
+            }>;
             expect(data[0].name).toBe('Manual Rollback');
 
             queryNormalizer.unsubscribe();

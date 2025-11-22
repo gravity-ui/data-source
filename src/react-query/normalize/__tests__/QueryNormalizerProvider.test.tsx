@@ -1,25 +1,29 @@
 import React from 'react';
 
-import {QueryClient, QueryClientProvider, useMutation, useQuery} from '@tanstack/react-query';
+import {QueryClientProvider, useMutation, useQuery} from '@tanstack/react-query';
 import {renderHook, waitFor} from '@testing-library/react';
 
+import {ClientDataManager} from '../../ClientDataManager';
 import type {DataSourceNormalizerConfig, OptimisticUpdateConfig} from '../../types/normalizer';
 import {QueryNormalizerProvider, useQueryNormalizer} from '../QueryNormalizerProvider';
 
 describe('QueryNormalizerProvider', () => {
-    let queryClient: QueryClient;
+    let dataManager: ClientDataManager;
 
     beforeEach(() => {
-        queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {retry: false},
-                mutations: {retry: false},
+        dataManager = new ClientDataManager(
+            {
+                defaultOptions: {
+                    queries: {retry: false},
+                    mutations: {retry: false},
+                },
             },
-        });
+            true,
+        );
     });
 
     afterEach(() => {
-        queryClient.clear();
+        dataManager.queryClient.clear();
     });
 
     const createWrapper = (
@@ -27,9 +31,9 @@ describe('QueryNormalizerProvider', () => {
         optimisticUpdateConfig?: OptimisticUpdateConfig,
     ) => {
         const Wrapper: React.FC<{children: React.ReactNode}> = ({children}) => (
-            <QueryClientProvider client={queryClient}>
+            <QueryClientProvider client={dataManager.queryClient}>
                 <QueryNormalizerProvider
-                    queryClient={queryClient}
+                    dataManager={dataManager}
                     normalizerConfig={normalizerConfig}
                     optimisticUpdateConfig={optimisticUpdateConfig}
                 >
@@ -131,8 +135,10 @@ describe('QueryNormalizerProvider', () => {
 
             // Query data should be updated
             await waitFor(() => {
-                const data = queryClient.getQueryData(['users']) as any[];
-                expect(data[0].name).toBe('Updated User');
+                const data = dataManager.queryClient.getQueryData<
+                    Array<{id: string; name: string}>
+                >(['users']);
+                expect(data?.[0].name).toBe('Updated User');
             });
         });
 
@@ -179,11 +185,16 @@ describe('QueryNormalizerProvider', () => {
 
             // Both queries should be updated
             await waitFor(() => {
-                const users = queryClient.getQueryData(['users']) as any[];
-                const user = queryClient.getQueryData(['user', '1']) as any;
+                const users = dataManager.queryClient.getQueryData<
+                    Array<{id: string; name: string}>
+                >(['users']);
+                const user = dataManager.queryClient.getQueryData<{id: string; name: string}>([
+                    'user',
+                    '1',
+                ]);
 
-                expect(users[0].name).toBe('Updated User');
-                expect(user.name).toBe('Updated User');
+                expect(users?.[0].name).toBe('Updated User');
+                expect(user?.name).toBe('Updated User');
             });
         });
     });
@@ -229,16 +240,20 @@ describe('QueryNormalizerProvider', () => {
 
             // Should have optimistic data immediately
             await waitFor(() => {
-                const data = queryClient.getQueryData(['users']) as any[];
-                expect(data[0].name).toBe('Optimistic');
+                const data = dataManager.queryClient.getQueryData<
+                    Array<{id: string; name: string}>
+                >(['users']);
+                expect(data?.[0].name).toBe('Optimistic');
             });
 
             // After completion - final data
             await waitFor(() => expect(mutationResult.current.isSuccess).toBe(true));
 
             await waitFor(() => {
-                const data = queryClient.getQueryData(['users']) as any[];
-                expect(data[0].name).toBe('Final');
+                const data = dataManager.queryClient.getQueryData<
+                    Array<{id: string; name: string}>
+                >(['users']);
+                expect(data?.[0].name).toBe('Final');
             });
         });
 
@@ -285,16 +300,20 @@ describe('QueryNormalizerProvider', () => {
 
             // Should have optimistic data
             await waitFor(() => {
-                const data = queryClient.getQueryData(['users']) as any[];
-                expect(data[0].name).toBe('Optimistic');
+                const data = dataManager.queryClient.getQueryData<
+                    Array<{id: string; name: string}>
+                >(['users']);
+                expect(data?.[0].name).toBe('Optimistic');
             });
 
             // After error - rollback
             await waitFor(() => expect(mutationResult.current.isError).toBe(true));
 
             await waitFor(() => {
-                const data = queryClient.getQueryData(['users']) as any[];
-                expect(data[0].name).toBe('Original');
+                const data = dataManager.queryClient.getQueryData<
+                    Array<{id: string; name: string}>
+                >(['users']);
+                expect(data?.[0].name).toBe('Original');
             });
 
             consoleSpy.mockRestore();
@@ -319,7 +338,7 @@ describe('QueryNormalizerProvider', () => {
             const {result: normalizerResult} = renderHook(() => useQueryNormalizer(), {wrapper});
 
             // Add data
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey: ['users'],
                 queryFn: async () => [{id: '1', name: 'User 1'}],
             });
@@ -343,7 +362,7 @@ describe('QueryNormalizerProvider', () => {
 
             const {result: normalizerResult} = renderHook(() => useQueryNormalizer(), {wrapper});
 
-            await queryClient.fetchQuery({
+            await dataManager.queryClient.fetchQuery({
                 queryKey: ['users'],
                 queryFn: async () => [{id: '1', name: 'User 1'}],
             });

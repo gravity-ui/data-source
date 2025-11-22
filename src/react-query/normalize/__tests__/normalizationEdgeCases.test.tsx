@@ -1,74 +1,91 @@
-import {createNormalizer} from '@normy/core';
-import {QueryClient} from '@tanstack/react-query';
+import type {Data} from '@normy/core';
 
-import {updateQueriesFromMutationData} from '../normalization';
+import {ClientDataManager} from '../../ClientDataManager';
 
 describe('normalization edge cases', () => {
-    let queryClient: QueryClient;
-    let normalizer: ReturnType<typeof createNormalizer>;
+    let dataManager: ClientDataManager;
 
     beforeEach(() => {
-        queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {retry: false},
-                mutations: {retry: false},
+        dataManager = new ClientDataManager(
+            {
+                defaultOptions: {
+                    queries: {retry: false},
+                    mutations: {retry: false},
+                },
             },
-        });
-
-        normalizer = createNormalizer({
-            devLogging: false,
-        });
+            {
+                normalizerConfig: {
+                    devLogging: false,
+                },
+            },
+        );
     });
 
     afterEach(() => {
-        queryClient.clear();
+        dataManager.queryClient.clear();
     });
 
     it('should work correctly with empty data', () => {
-        const queryKey = ['empty'];
-        queryClient.setQueryData(queryKey, []);
-        normalizer.setQuery(JSON.stringify(queryKey), []);
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
 
-        const mutationData = {id: '1', name: 'New'};
+        const queryKey = ['empty'];
+        dataManager.queryClient.setQueryData(queryKey, []);
+        dataManager.normalizer.setQuery(JSON.stringify(queryKey), []);
+
+        const mutationData: Data = {id: '1', name: 'New'};
         expect(() => {
-            updateQueriesFromMutationData(mutationData, normalizer, queryClient);
+            dataManager.optimisticUpdate(mutationData);
         }).not.toThrow();
     });
 
     it('should work correctly with null data', () => {
-        const queryKey = ['null'];
-        queryClient.setQueryData(queryKey, null);
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
 
-        const mutationData = {id: '1', name: 'New'};
+        const queryKey = ['null'];
+        dataManager.queryClient.setQueryData(queryKey, null);
+
+        const mutationData: Data = {id: '1', name: 'New'};
         expect(() => {
-            updateQueriesFromMutationData(mutationData, normalizer, queryClient);
+            dataManager.optimisticUpdate(mutationData);
         }).not.toThrow();
     });
 
     it('should work correctly with undefined data', () => {
-        const queryKey = ['undefined'];
-        queryClient.setQueryData(queryKey, undefined);
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
 
-        const mutationData = {id: '1', name: 'New'};
+        const queryKey = ['undefined'];
+        dataManager.queryClient.setQueryData(queryKey, undefined);
+
+        const mutationData: Data = {id: '1', name: 'New'};
         expect(() => {
-            updateQueriesFromMutationData(mutationData, normalizer, queryClient);
+            dataManager.optimisticUpdate(mutationData);
         }).not.toThrow();
     });
 
     it('should work correctly with arrays of objects', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const queryKey = ['array'];
         const data = [
             {id: '1', name: 'Item 1'},
             {id: '2', name: 'Item 2'},
         ];
 
-        queryClient.setQueryData(queryKey, data);
-        normalizer.setQuery(JSON.stringify(queryKey), data);
+        dataManager.queryClient.setQueryData(queryKey, data);
+        dataManager.normalizer.setQuery(JSON.stringify(queryKey), data);
 
-        const mutationData = {id: '1', name: 'Updated Item 1'};
-        updateQueriesFromMutationData(mutationData, normalizer, queryClient);
+        const mutationData: Data = {id: '1', name: 'Updated Item 1'};
+        dataManager.optimisticUpdate(mutationData);
 
-        const updatedData = queryClient.getQueryData(queryKey) as Array<{
+        const updatedData = dataManager.queryClient.getQueryData(queryKey) as Array<{
             id: string;
             name: string;
         }>;
@@ -77,16 +94,23 @@ describe('normalization edge cases', () => {
     });
 
     it('should work correctly with single objects', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const queryKey = ['single'];
         const data = {id: '1', name: 'Item'};
 
-        queryClient.setQueryData(queryKey, data);
-        normalizer.setQuery(JSON.stringify(queryKey), data);
+        dataManager.queryClient.setQueryData(queryKey, data);
+        dataManager.normalizer.setQuery(JSON.stringify(queryKey), data);
 
-        const mutationData = {id: '1', name: 'Updated Item'};
-        updateQueriesFromMutationData(mutationData, normalizer, queryClient);
+        const mutationData: Data = {id: '1', name: 'Updated Item'};
+        dataManager.optimisticUpdate(mutationData);
 
-        const updatedData = queryClient.getQueryData(queryKey) as {id: string; name: string};
+        const updatedData = dataManager.queryClient.getQueryData(queryKey) as {
+            id: string;
+            name: string;
+        };
         expect(updatedData.name).toBe('Updated Item');
     });
 });
