@@ -17,6 +17,9 @@ jest.mock('../DataManagerContext', () => {
 
 describe('withDataManager', () => {
     const mockDataManager: DataManager = {
+        normalizer: undefined,
+        optimisticUpdate: jest.fn(),
+        automaticInvalidate: jest.fn(),
         invalidateTag: jest.fn(),
         invalidateTags: jest.fn(),
         invalidateSource: jest.fn(),

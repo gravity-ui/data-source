@@ -24,11 +24,9 @@ export {ClientDataManager} from './ClientDataManager';
 
 export {DataSourceProvider} from './DataSourceProvider';
 
-export {updateQueriesFromMutationData} from './normalize/normalization';
 export {QueryNormalizerProvider, useQueryNormalizer} from './normalize/QueryNormalizerProvider';
 export type {
     OptimisticUpdateConfig,
     DataSourceNormalizerConfig,
     OptionsNormalizerConfig,
-    Normalizer,
 } from './types/normalizer';
