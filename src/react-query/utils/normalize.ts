@@ -12,7 +12,7 @@ export const shouldNormalize = (
 };
 
 /** Checks if data should be optimistically updated */
-export const shouldOptimisticallyUpdate = (
+export const shouldUpdateOptimistically = (
     providerConfig: boolean,
     mutationConfig: boolean | undefined,
 ): boolean => {

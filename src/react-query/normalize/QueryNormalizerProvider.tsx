@@ -1,14 +1,7 @@
 import React from 'react';
 
-import {createNormalizer} from '@normy/core';
-import type {NormalizedData} from '@normy/core/types/types';
-import type {QueryClient} from '@tanstack/react-query';
-
-import type {
-    DataSourceNormalizerConfig,
-    Normalizer,
-    OptimisticUpdateConfig,
-} from '../types/normalizer';
+import type {ClientDataManager} from '../ClientDataManager';
+import type {DataSourceNormalizerConfig, OptimisticUpdateConfig} from '../types/normalizer';
 
 import {createQueryNormalizer} from './normalization';
 
@@ -18,39 +11,39 @@ const QueryNormalizerContext = React.createContext<
 
 export interface QueryNormalizerProviderProps {
     /** React Query client instance */
-    queryClient: QueryClient;
+    dataManager: ClientDataManager;
     children: React.ReactNode;
     /** Configuration for the normalizer */
     normalizerConfig?: DataSourceNormalizerConfig;
-    /** Initial normalized data to populate the store */
-    initialNormalizedData?: NormalizedData;
     /** Configuration for optimistic updates */
     optimisticUpdateConfig?: OptimisticUpdateConfig;
-    /** Custom normalizer instance */
-    normalizer?: Normalizer;
 }
 
 export const QueryNormalizerProvider: React.FC<QueryNormalizerProviderProps> = ({
-    queryClient,
+    dataManager,
     normalizerConfig = {},
-    initialNormalizedData,
     optimisticUpdateConfig = {},
-    normalizer: customNormalizer,
     children,
 }) => {
     const [queryNormalizer] = React.useState(() => {
-        const normalizer =
-            customNormalizer ?? createNormalizer(normalizerConfig, initialNormalizedData);
+        if (!dataManager.normalizer) {
+            return null;
+        }
 
         return createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig,
             optimisticUpdateConfig,
         });
     });
 
     React.useEffect(() => {
+        if (!queryNormalizer) {
+            return undefined;
+        }
+
         queryNormalizer.subscribe();
 
         return () => {
@@ -59,6 +52,10 @@ export const QueryNormalizerProvider: React.FC<QueryNormalizerProviderProps> = (
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    if (!queryNormalizer) {
+        return <React.Fragment>{children}</React.Fragment>;
+    }
 
     return (
         <QueryNormalizerContext.Provider value={queryNormalizer}>

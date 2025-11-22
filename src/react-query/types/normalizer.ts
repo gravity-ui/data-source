@@ -1,4 +1,4 @@
-import type {NormalizerConfig, createNormalizer} from '@normy/core';
+import type {NormalizerConfig} from '@normy/core';
 
 export interface OptimisticUpdateConfig {
     /** Whether optimistic synchronization is enabled, defaults to false. Note: won't work without normalization */
@@ -15,6 +15,3 @@ export interface OptionsNormalizerConfig {
 }
 
 export type DataSourceNormalizerConfig = NormalizerConfig & OptionsNormalizerConfig;
-
-/** Type for normalizer instance returned by createNormalizer */
-export type Normalizer = ReturnType<typeof createNormalizer>;

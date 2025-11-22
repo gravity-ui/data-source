@@ -1,12 +1,9 @@
-import {createNormalizer} from '@normy/core';
-import {QueryClient} from '@tanstack/react-query';
-
+import {ClientDataManager} from '../../ClientDataManager';
 import type {DataSourceNormalizerConfig, OptimisticUpdateConfig} from '../../types/normalizer';
 import {createQueryNormalizer} from '../normalization';
 
 describe('createQueryNormalizer', () => {
-    let queryClient: QueryClient;
-    let normalizer: ReturnType<typeof createNormalizer>;
+    let dataManager: ClientDataManager;
 
     const normalizerConfig: DataSourceNormalizerConfig = {
         normalize: true,
@@ -18,26 +15,34 @@ describe('createQueryNormalizer', () => {
     };
 
     beforeEach(() => {
-        queryClient = new QueryClient({
-            defaultOptions: {
-                queries: {retry: false},
-                mutations: {retry: false},
+        dataManager = new ClientDataManager(
+            {
+                defaultOptions: {
+                    queries: {retry: false},
+                    mutations: {retry: false},
+                },
             },
-        });
-
-        normalizer = createNormalizer({
-            devLogging: false,
-        });
+            {
+                normalizerConfig: {
+                    devLogging: false,
+                },
+            },
+        );
     });
 
     afterEach(() => {
-        queryClient.clear();
+        dataManager.queryClient.clear();
     });
 
     it('should create queryNormalizer with required methods', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const queryNormalizer = createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig,
             optimisticUpdateConfig,
         });
@@ -54,9 +59,14 @@ describe('createQueryNormalizer', () => {
     });
 
     it('getNormalizedData should return normalized data', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const queryNormalizer = createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig,
             optimisticUpdateConfig,
         });
@@ -68,31 +78,44 @@ describe('createQueryNormalizer', () => {
     });
 
     it('setNormalizedData should update queries', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const queryKey = ['users'];
-        queryClient.setQueryData(queryKey, [{id: '1', name: 'Old'}]);
-        normalizer.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old'}]);
+        dataManager.queryClient.setQueryData(queryKey, [{id: '1', name: 'Old'}]);
+        dataManager.normalizer.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old'}]);
 
         const queryNormalizer = createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig,
             optimisticUpdateConfig,
         });
 
         queryNormalizer.setNormalizedData({id: '1', name: 'New'});
 
-        const data = queryClient.getQueryData(queryKey) as Array<{id: string; name: string}>;
+        const data = dataManager.queryClient.getQueryData(queryKey) as Array<{
+            id: string;
+            name: string;
+        }>;
         expect(data[0].name).toBe('New');
     });
 
     it('clear should clear normalized data', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const queryKey = ['users'];
-        queryClient.setQueryData(queryKey, [{id: '1', name: 'User'}]);
-        normalizer.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'User'}]);
+        dataManager.queryClient.setQueryData(queryKey, [{id: '1', name: 'User'}]);
+        dataManager.normalizer.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'User'}]);
 
         const queryNormalizer = createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig,
             optimisticUpdateConfig,
         });
@@ -104,18 +127,23 @@ describe('createQueryNormalizer', () => {
     });
 
     it('getObjectById should return object by ID', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const queryKey = ['users'];
         const userData = [{id: '1', name: 'User 1'}];
 
         const queryNormalizer = createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig,
             optimisticUpdateConfig,
         });
 
         // Add to normalizer
-        normalizer.setQuery(JSON.stringify(queryKey), userData);
+        dataManager.normalizer.setQuery(JSON.stringify(queryKey), userData);
 
         // Get normalized data
         const normalized = queryNormalizer.getNormalizedData();
@@ -127,18 +155,23 @@ describe('createQueryNormalizer', () => {
     });
 
     it('getDependentQueries should return dependent queries', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const queryKey1 = ['users'];
         const queryKey2 = ['user', '1'];
 
-        queryClient.setQueryData(queryKey1, [{id: '1', name: 'User'}]);
-        queryClient.setQueryData(queryKey2, {id: '1', name: 'User'});
+        dataManager.queryClient.setQueryData(queryKey1, [{id: '1', name: 'User'}]);
+        dataManager.queryClient.setQueryData(queryKey2, {id: '1', name: 'User'});
 
-        normalizer.setQuery(JSON.stringify(queryKey1), [{id: '1', name: 'User'}]);
-        normalizer.setQuery(JSON.stringify(queryKey2), {id: '1', name: 'User'});
+        dataManager.normalizer.setQuery(JSON.stringify(queryKey1), [{id: '1', name: 'User'}]);
+        dataManager.normalizer.setQuery(JSON.stringify(queryKey2), {id: '1', name: 'User'});
 
         const queryNormalizer = createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig,
             optimisticUpdateConfig,
         });
@@ -151,9 +184,14 @@ describe('createQueryNormalizer', () => {
     });
 
     it('getDependentQueriesByIds should be available', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const queryNormalizer = createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig,
             optimisticUpdateConfig,
         });
@@ -168,11 +206,16 @@ describe('createQueryNormalizer', () => {
     });
 
     it('should correctly handle normalize: false', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const config: DataSourceNormalizerConfig = {normalize: false};
 
         const queryNormalizer = createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig: config,
             optimisticUpdateConfig,
         });
@@ -181,11 +224,16 @@ describe('createQueryNormalizer', () => {
     });
 
     it('should disable optimistic updates if normalize is disabled', () => {
+        if (!dataManager.normalizer) {
+            throw new Error('Normalizer should be initialized');
+        }
+
         const config: DataSourceNormalizerConfig = {normalize: false};
 
         const queryNormalizer = createQueryNormalizer({
-            queryClient,
-            normalizer,
+            queryClient: dataManager.queryClient,
+            normalizer: dataManager.normalizer,
+            optimisticUpdate: (data) => dataManager.optimisticUpdate(data),
             normalizerConfig: config,
             optimisticUpdateConfig: {enabled: true}, // Try to enable
         });

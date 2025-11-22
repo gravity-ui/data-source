@@ -8,6 +8,9 @@ import {DataManagerContext, useDataManager} from '../DataManagerContext';
 describe('useDataManager', () => {
     it('should return dataManager from context', () => {
         const mockDataManager: DataManager = {
+            normalizer: undefined,
+            optimisticUpdate: jest.fn(),
+            automaticInvalidate: jest.fn(),
             invalidateTag: jest.fn(),
             invalidateTags: jest.fn(),
             invalidateSource: jest.fn(),
@@ -29,14 +32,14 @@ describe('useDataManager', () => {
     });
 
     it('should throw an error when dataManager is not provided', () => {
-        try {
+        const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+        expect(() => {
             renderHook(() => useDataManager());
-        } catch (error) {
-            expect(error).toBeInstanceOf(Error);
-            // Just to be sure that the error is from the right place
-            expect((error as Error).message).toBe(
-                'DataManager is not provided by context. Use DataManagerContext.Provider to do it',
-            );
-        }
+        }).toThrow(
+            'DataManager is not provided by context. Use DataManagerContext.Provider to do it',
+        );
+
+        consoleSpy.mockRestore();
     });
 });

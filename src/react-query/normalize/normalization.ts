@@ -1,43 +1,18 @@
 import type {Data} from '@normy/core';
 import type {QueryClient, QueryKey} from '@tanstack/react-query';
 
+import type {Normalizer} from '../../core';
 import type {
     DataSourceNormalizerConfig,
-    Normalizer,
     OptimisticUpdateConfig,
     OptionsNormalizerConfig,
 } from '../types/normalizer';
-import {shouldNormalize, shouldOptimisticallyUpdate} from '../utils/normalize';
-
-// Function to update queries in QueryClient based on normalized data
-export const updateQueriesFromMutationData = (
-    mutationData: Data,
-    normalizer: Normalizer,
-    queryClient: QueryClient,
-) => {
-    const queriesToUpdate = normalizer.getQueriesToUpdate(mutationData);
-
-    queriesToUpdate.forEach((query) => {
-        const queryKey = JSON.parse(query.queryKey) as QueryKey;
-        const cachedQuery = queryClient.getQueryCache().find({queryKey});
-
-        // Preserve state that should not be reset
-        const dataUpdatedAt = cachedQuery?.state.dataUpdatedAt;
-        const isInvalidated = cachedQuery?.state.isInvalidated;
-        const error = cachedQuery?.state.error;
-        const status = cachedQuery?.state.status;
-
-        queryClient.setQueryData(queryKey, () => query.data, {
-            updatedAt: dataUpdatedAt,
-        });
-
-        cachedQuery?.setState({isInvalidated, error, status});
-    });
-};
+import {shouldNormalize, shouldUpdateOptimistically} from '../utils/normalize';
 
 interface CreateQueryNormalizerOptions {
     queryClient: QueryClient;
     normalizer: Normalizer;
+    optimisticUpdate: (mutationData: Data) => void;
     normalizerConfig: DataSourceNormalizerConfig;
     optimisticUpdateConfig: OptimisticUpdateConfig;
 }
@@ -45,6 +20,7 @@ interface CreateQueryNormalizerOptions {
 export const createQueryNormalizer = ({
     queryClient,
     normalizer,
+    optimisticUpdate,
     normalizerConfig,
     optimisticUpdateConfig,
 }: CreateQueryNormalizerOptions) => {
@@ -59,8 +35,7 @@ export const createQueryNormalizer = ({
         /** Get normalized data */
         getNormalizedData: normalizer.getNormalizedData,
         /** Set normalized data (for manual updates, WebSocket, etc.) */
-        setNormalizedData: (data: Data) =>
-            updateQueriesFromMutationData(data, normalizer, queryClient),
+        setNormalizedData: (data: Data) => optimisticUpdate(data),
         /** Clear all normalized data */
         clear: normalizer.clearNormalizedData,
         /** Get object by ID */
@@ -122,7 +97,7 @@ export const createQueryNormalizer = ({
 
                 if (
                     !shouldNormalize(globalNormalize, mutationQueryNormalize?.normalize) &&
-                    !shouldOptimisticallyUpdate(globalOptimistic, mutationQueryOptimistic?.enabled)
+                    !shouldUpdateOptimistically(globalOptimistic, mutationQueryOptimistic?.enabled)
                 ) {
                     return;
                 }
@@ -132,11 +107,7 @@ export const createQueryNormalizer = ({
                     event.action.type === 'success' &&
                     event.action.data
                 ) {
-                    updateQueriesFromMutationData(
-                        event.action.data as Data,
-                        normalizer,
-                        queryClient,
-                    );
+                    optimisticUpdate(event.action.data as Data);
                 } else if (event.type === 'updated' && event.action.type === 'pending') {
                     const context = event.mutation.state.context as {
                         optimisticData?: Data;
@@ -165,11 +136,7 @@ export const createQueryNormalizer = ({
                             }
                         }
 
-                        updateQueriesFromMutationData(
-                            context.optimisticData,
-                            normalizer,
-                            queryClient,
-                        );
+                        optimisticUpdate(context.optimisticData);
                     }
                 } else if (event.type === 'updated' && event.action.type === 'error') {
                     const context = event.mutation.state.context as {
@@ -181,11 +148,7 @@ export const createQueryNormalizer = ({
                             console.log('[OptimisticUpdate] Rolling back changes');
                         }
 
-                        updateQueriesFromMutationData(
-                            context.rollbackData,
-                            normalizer,
-                            queryClient,
-                        );
+                        optimisticUpdate(context.rollbackData);
                     }
                 }
             });

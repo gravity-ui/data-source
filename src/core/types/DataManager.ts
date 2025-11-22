@@ -1,7 +1,16 @@
+import type {Data} from '@normy/core';
+
 import type {InvalidateOptions} from './DataManagerOptions';
 import type {AnyDataSource, DataSourceParams, DataSourceTag} from './DataSource';
+import type {Normalizer} from './Normalizer';
 
 export interface DataManager {
+    normalizer?: Normalizer;
+
+    optimisticUpdate(mutationData: Data): void;
+
+    automaticInvalidate(data: Data): void;
+
     invalidateTag(tag: DataSourceTag, invalidateOptions?: InvalidateOptions): Promise<void>;
 
     invalidateTags(tags: DataSourceTag[], invalidateOptions?: InvalidateOptions): Promise<void>;

@@ -14,7 +14,7 @@ describe('Three-Level Configuration Integration', () => {
     let dataManager: ClientDataManager;
 
     beforeEach(() => {
-        dataManager = new ClientDataManager();
+        dataManager = new ClientDataManager({}, true);
         queryClient = dataManager.queryClient;
     });
 
@@ -26,12 +26,21 @@ describe('Three-Level Configuration Integration', () => {
         it('should use global configuration from Provider', async () => {
             const globalGetKey = jest.fn((obj) => `global:${obj.id}`);
 
+            // Create dataManager with custom normalizer config
+            const customDataManager = new ClientDataManager(
+                {},
+                {
+                    normalizerConfig: {
+                        getNormalizationObjectKey: globalGetKey,
+                    },
+                },
+            );
+
             const wrapper = ({children}: {children: React.ReactNode}) => (
                 <DataSourceProvider
-                    dataManager={dataManager}
+                    dataManager={customDataManager}
                     normalizerConfig={{
                         normalize: true,
-                        getNormalizationObjectKey: globalGetKey,
                     }}
                 >
                     {children}
@@ -58,12 +67,21 @@ describe('Three-Level Configuration Integration', () => {
         it('global getArrayType should work', async () => {
             const globalGetArrayType = jest.fn(({arrayKey}) => `global:${arrayKey}`);
 
+            // Create dataManager with custom normalizer config
+            const customDataManager = new ClientDataManager(
+                {},
+                {
+                    normalizerConfig: {
+                        getArrayType: globalGetArrayType,
+                    },
+                },
+            );
+
             const wrapper = ({children}: {children: React.ReactNode}) => (
                 <DataSourceProvider
-                    dataManager={dataManager}
+                    dataManager={customDataManager}
                     normalizerConfig={{
                         normalize: true,
-                        getArrayType: globalGetArrayType,
                     }}
                 >
                     {children}
