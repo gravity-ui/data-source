@@ -14,6 +14,7 @@ import {
     hasTag,
 } from '../core';
 import type {InvalidateOptions, InvalidateRepeatOptions} from '../core/types/DataManagerOptions';
+import type {QueryNormalizer} from '../core/types/Normalizer';
 
 import type {QueryNormalizer} from './types/normalizer';
 import {createQueryNormalizer} from './utils/normalize';
@@ -27,7 +28,7 @@ export class ClientDataManager implements DataManager {
     readonly normalizer?: Normalizer | undefined;
     readonly queryNormalizer?: QueryNormalizer | undefined;
 
-    constructor(config: ClientDataManagerConfig = {}, normalizerConfig?: NormalizerClientConfig) {
+    constructor(config: ClientDataManagerConfig = {}) {
         this.queryClient = new QueryClient({
             ...config,
             defaultOptions: {
@@ -62,6 +63,7 @@ export class ClientDataManager implements DataManager {
 
         queriesToUpdate.forEach((query) => {
             const queryKey = JSON.parse(query.queryKey) as QueryKey;
+
             const cachedQuery = this.queryClient.getQueryCache().find({queryKey});
 
             const dataUpdatedAt = cachedQuery?.state.dataUpdatedAt;

@@ -26,7 +26,7 @@ export interface QueryDataAdditionalOptions<
 
 export interface QueryCustomOptions {
     /** Normalization configuration (enable/disable) */
-    normalizationConfig?: OptionsNormalizerConfig;
+    normalize?: boolean;
     /** Optimistic data update configuration */
-    optimisticUpdateConfig?: OptimisticUpdateConfig;
+    optimistic?: boolean | OptimisticConfig;
 }
