@@ -14,8 +14,8 @@ import {
     hasTag,
 } from '../core';
 import type {InvalidateOptions, InvalidateRepeatOptions} from '../core/types/DataManagerOptions';
-import type {QueryNormalizer} from '../core/types/Normalizer';
 
+import type {QueryNormalizer} from './types/normalizer';
 import {createQueryNormalizer} from './utils/normalize';
 
 export interface ClientDataManagerConfig extends QueryClientConfig {
@@ -43,7 +43,7 @@ export class ClientDataManager implements DataManager {
             },
         });
 
-        this.normalizer = this.initializeNormalize(config.normalizerConfig);
+        this.normalizer = this.createNormalize(config.normalizerConfig);
         this.queryNormalizer = createQueryNormalizer(
             this.normalizer,
             this.queryClient,
@@ -185,18 +185,6 @@ export class ClientDataManager implements DataManager {
         for (let i = 1; i <= repeat.count; i++) {
             setTimeout(invalidate, repeat.interval * i);
         }
-    }
-
-    private initializeNormalize(config?: NormalizerConfig | boolean): Normalizer | undefined {
-        if (config === false || config === undefined) {
-            return undefined;
-        }
-
-        if (config === true) {
-            return this.createNormalize({});
-        }
-
-        return this.createNormalize(config);
     }
 
     private createNormalize(
