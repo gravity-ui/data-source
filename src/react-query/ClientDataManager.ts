@@ -14,7 +14,6 @@ import {
     hasTag,
 } from '../core';
 import type {InvalidateOptions, InvalidateRepeatOptions} from '../core/types/DataManagerOptions';
-import type {QueryNormalizer} from '../core/types/Normalizer';
 
 import type {QueryNormalizer} from './types/normalizer';
 import {createQueryNormalizer} from './utils/normalize';
