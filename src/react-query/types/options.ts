@@ -1,6 +1,6 @@
 import type {DefaultError, QueryKey} from '@tanstack/react-query';
 
-import type {OptimisticUpdateConfig, OptionsNormalizerConfig} from './normalizer';
+import type {OptimisticConfig} from './normalizer';
 import type {RefetchInterval} from './refetch-interval';
 
 export interface QueryDataAdditionalOptions<
@@ -19,7 +19,7 @@ export interface QueryDataAdditionalOptions<
 
 export interface QueryCustomOptions {
     /** Normalization configuration (enable/disable) */
-    normalizationConfig?: OptionsNormalizerConfig;
+    normalize?: boolean;
     /** Optimistic data update configuration */
-    optimisticUpdateConfig?: OptimisticUpdateConfig;
+    optimistic?: boolean | OptimisticConfig;
 }

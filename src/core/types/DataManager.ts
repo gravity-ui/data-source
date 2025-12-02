@@ -9,7 +9,7 @@ export interface DataManager {
 
     optimisticUpdate(mutationData: Data): void;
 
-    automaticInvalidate(data: Data): void;
+    invalidateData(data: Data): void;
 
     invalidateTag(tag: DataSourceTag, invalidateOptions?: InvalidateOptions): Promise<void>;
 

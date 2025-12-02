@@ -9,20 +9,25 @@ import {
     type DataSourceParams,
     type DataSourceTag,
     type Normalizer,
-    type NormalizerClientConfig,
     type NormalizerConfig,
     composeFullKey,
     hasTag,
 } from '../core';
 import type {InvalidateOptions, InvalidateRepeatOptions} from '../core/types/DataManagerOptions';
+import type {QueryNormalizer} from '../core/types/Normalizer';
 
-export type ClientDataManagerConfig = QueryClientConfig;
+import {createQueryNormalizer} from './utils/normalize';
+
+export interface ClientDataManagerConfig extends QueryClientConfig {
+    normalizerConfig?: NormalizerConfig | boolean;
+}
 
 export class ClientDataManager implements DataManager {
     readonly queryClient: QueryClient;
     readonly normalizer?: Normalizer | undefined;
+    readonly queryNormalizer?: QueryNormalizer | undefined;
 
-    constructor(config: ClientDataManagerConfig = {}, normalizerConfig?: NormalizerClientConfig) {
+    constructor(config: ClientDataManagerConfig = {}) {
         this.queryClient = new QueryClient({
             ...config,
             defaultOptions: {
@@ -38,7 +43,13 @@ export class ClientDataManager implements DataManager {
             },
         });
 
-        this.normalizer = this.initializeNormalize(normalizerConfig);
+        this.normalizer = this.initializeNormalize(config.normalizerConfig);
+        this.queryNormalizer = createQueryNormalizer(
+            this.normalizer,
+            this.queryClient,
+            config.normalizerConfig,
+            (data) => this.optimisticUpdate(data),
+        );
     }
 
     optimisticUpdate(mutationData: Data) {
@@ -50,6 +61,7 @@ export class ClientDataManager implements DataManager {
 
         queriesToUpdate.forEach((query) => {
             const queryKey = JSON.parse(query.queryKey) as QueryKey;
+
             const cachedQuery = this.queryClient.getQueryCache().find({queryKey});
 
             const dataUpdatedAt = cachedQuery?.state.dataUpdatedAt;
@@ -65,7 +77,7 @@ export class ClientDataManager implements DataManager {
         });
     }
 
-    automaticInvalidate(data: Data): void {
+    invalidateData(data: Data): void {
         if (!this.normalizer) {
             return;
         }
@@ -75,7 +87,6 @@ export class ClientDataManager implements DataManager {
         queriesToUpdate.forEach((query) => {
             const queryKey = JSON.parse(query.queryKey) as QueryKey;
             this.queryClient.invalidateQueries({queryKey});
-            this.normalizer?.removeQuery(query.queryKey);
         });
     }
 
@@ -176,7 +187,7 @@ export class ClientDataManager implements DataManager {
         }
     }
 
-    private initializeNormalize(config?: NormalizerClientConfig): Normalizer | undefined {
+    private initializeNormalize(config?: NormalizerConfig | boolean): Normalizer | undefined {
         if (config === false || config === undefined) {
             return undefined;
         }
@@ -188,26 +199,17 @@ export class ClientDataManager implements DataManager {
         return this.createNormalize(config);
     }
 
-    private createNormalize(config: NormalizerConfig): Normalizer {
-        const normalizer = createNormalizer(config.normalizerConfig, config.initialNormalizedData);
+    private createNormalize(
+        config: boolean | NormalizerConfig | undefined,
+    ): Normalizer | undefined {
+        if (!config) {
+            return undefined;
+        }
 
-        return {
-            getNormalizedData: () => normalizer.getNormalizedData(),
-            clearNormalizedData: () => normalizer.clearNormalizedData(),
-            setQuery: (queryKey: string, queryData: Data) =>
-                normalizer.setQuery(queryKey, queryData),
-            removeQuery: (queryKey: string) => normalizer.removeQuery(queryKey),
-            getQueriesToUpdate: (mutationData: Data) => normalizer.getQueriesToUpdate(mutationData),
-            getObjectById: <T extends Data>(id: string, exampleObject?: T) =>
-                normalizer.getObjectById(id, exampleObject),
-            getQueryFragment: <T extends Data>(fragment: Data, exampleObject?: T) =>
-                normalizer.getQueryFragment(fragment, exampleObject),
-            getDependentQueries: (mutationData: Data) =>
-                normalizer.getDependentQueries(mutationData),
-            getDependentQueriesByIds: (ids: ReadonlyArray<string>) =>
-                normalizer.getDependentQueriesByIds(ids),
-            getCurrentData: <T extends Data>(newData: T) => normalizer.getCurrentData(newData),
-            log: (...messages: unknown[]) => normalizer.log(...messages),
-        };
+        if (config === true) {
+            return createNormalizer({});
+        }
+
+        return createNormalizer(config);
     }
 }

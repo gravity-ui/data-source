@@ -1,24 +1,20 @@
 import type {Data} from '@normy/core';
 
-import {ClientDataManager} from '../../ClientDataManager';
+import {ClientDataManager} from '../ClientDataManager';
 
 describe('normalization edge cases', () => {
     let dataManager: ClientDataManager;
 
     beforeEach(() => {
-        dataManager = new ClientDataManager(
-            {
-                defaultOptions: {
-                    queries: {retry: false},
-                    mutations: {retry: false},
-                },
+        dataManager = new ClientDataManager({
+            defaultOptions: {
+                queries: {retry: false},
+                mutations: {retry: false},
             },
-            {
-                normalizerConfig: {
-                    devLogging: false,
-                },
+            normalizerConfig: {
+                devLogging: false,
             },
-        );
+        });
     });
 
     afterEach(() => {
@@ -26,13 +22,11 @@ describe('normalization edge cases', () => {
     });
 
     it('should work correctly with empty data', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey = ['empty'];
         dataManager.queryClient.setQueryData(queryKey, []);
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey), []);
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey), []);
 
         const mutationData: Data = {id: '1', name: 'New'};
         expect(() => {
@@ -41,9 +35,7 @@ describe('normalization edge cases', () => {
     });
 
     it('should work correctly with null data', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey = ['null'];
         dataManager.queryClient.setQueryData(queryKey, null);
@@ -55,9 +47,7 @@ describe('normalization edge cases', () => {
     });
 
     it('should work correctly with undefined data', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey = ['undefined'];
         dataManager.queryClient.setQueryData(queryKey, undefined);
@@ -69,9 +59,7 @@ describe('normalization edge cases', () => {
     });
 
     it('should work correctly with arrays of objects', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey = ['array'];
         const data = [
@@ -80,7 +68,7 @@ describe('normalization edge cases', () => {
         ];
 
         dataManager.queryClient.setQueryData(queryKey, data);
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey), data);
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey), data);
 
         const mutationData: Data = {id: '1', name: 'Updated Item 1'};
         dataManager.optimisticUpdate(mutationData);
@@ -94,15 +82,13 @@ describe('normalization edge cases', () => {
     });
 
     it('should work correctly with single objects', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey = ['single'];
         const data = {id: '1', name: 'Item'};
 
         dataManager.queryClient.setQueryData(queryKey, data);
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey), data);
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey), data);
 
         const mutationData: Data = {id: '1', name: 'Updated Item'};
         dataManager.optimisticUpdate(mutationData);

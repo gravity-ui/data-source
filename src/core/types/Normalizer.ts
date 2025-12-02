@@ -1,12 +1,12 @@
 import type {NormalizerConfig as NormalizeConfigBase} from '@normy/core';
 import type {Data, NormalizedData} from '@normy/core/types/types';
 
-export interface NormalizerConfig {
-    normalizerConfig?: NormalizeConfigBase;
-    initialNormalizedData?: NormalizedData;
-}
+import type {OptimisticConfig} from '../../react-query/types/normalizer';
 
-export type NormalizerClientConfig = boolean | NormalizerConfig | undefined;
+export interface NormalizerConfig extends NormalizeConfigBase {
+    initialData?: NormalizedData;
+    optimistic?: boolean | OptimisticConfig;
+}
 
 export interface Normalizer {
     getNormalizedData: () => NormalizedData;
@@ -23,4 +23,25 @@ export interface Normalizer {
     getDependentQueriesByIds: (ids: ReadonlyArray<string>) => readonly string[];
     getCurrentData: <T extends Data>(newData: T) => T | undefined;
     log: (...messages: unknown[]) => void;
+}
+
+export interface QueryNormalizer {
+    /** Get normalized data */
+    getNormalizedData: () => NormalizedData;
+    /** Set normalized data (for manual updates, WebSocket, etc.) */
+    setNormalizedData: (data: Data) => void;
+    /** Clear all normalized data */
+    clear: () => void;
+    /** Get object by ID */
+    getObjectById: <T extends Data>(id: string, exampleObject?: T) => T | undefined;
+    /** Get query fragment */
+    getQueryFragment: <T extends Data>(fragment: Data, exampleObject?: T) => T | undefined;
+    /** Get dependent queries by data */
+    getDependentQueries: (mutationData: Data) => ReadonlyArray<readonly unknown[]>;
+    /** Get dependent queries by IDs */
+    getDependentQueriesByIds: (ids: ReadonlyArray<string>) => ReadonlyArray<readonly unknown[]>;
+    /** Subscribe to QueryCache changes */
+    subscribe: () => void;
+    /** Unsubscribe from QueryCache changes */
+    unsubscribe: () => void;
 }

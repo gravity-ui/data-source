@@ -1,24 +1,20 @@
 import type {Data} from '@normy/core';
 
-import {ClientDataManager} from '../../ClientDataManager';
+import {ClientDataManager} from '../ClientDataManager';
 
 describe('updateQueriesFromMutationData', () => {
     let dataManager: ClientDataManager;
 
     beforeEach(() => {
-        dataManager = new ClientDataManager(
-            {
-                defaultOptions: {
-                    queries: {retry: false},
-                    mutations: {retry: false},
-                },
+        dataManager = new ClientDataManager({
+            defaultOptions: {
+                queries: {retry: false},
+                mutations: {retry: false},
             },
-            {
-                normalizerConfig: {
-                    devLogging: false,
-                },
+            normalizerConfig: {
+                devLogging: false,
             },
-        );
+        });
     });
 
     afterEach(() => {
@@ -26,16 +22,14 @@ describe('updateQueriesFromMutationData', () => {
     });
 
     it('should update query data based on normalized data', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         // Set initial data in query
         const queryKey = ['users'];
         dataManager.queryClient.setQueryData(queryKey, [{id: '1', name: 'Old Name'}]);
 
         // Add query to normalizer
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old Name'}]);
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old Name'}]);
 
         // Update data via mutation
         const mutationData: Data = {id: '1', name: 'New Name'};
@@ -52,9 +46,7 @@ describe('updateQueriesFromMutationData', () => {
     });
 
     it('should update multiple queries with the same object', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey1 = ['users'];
         const queryKey2 = ['user', '1'];
@@ -64,8 +56,8 @@ describe('updateQueriesFromMutationData', () => {
         dataManager.queryClient.setQueryData(queryKey2, {id: '1', name: 'User 1'});
 
         // Add to normalizer
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey1), [{id: '1', name: 'User 1'}]);
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey2), {id: '1', name: 'User 1'});
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey1), [{id: '1', name: 'User 1'}]);
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey2), {id: '1', name: 'User 1'});
 
         // Update via mutation
         const mutationData: Data = {id: '1', name: 'Updated User'};
@@ -83,9 +75,7 @@ describe('updateQueriesFromMutationData', () => {
     });
 
     it('should preserve dataUpdatedAt on update', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey = ['users'];
         const originalUpdatedAt = Date.now();
@@ -94,7 +84,7 @@ describe('updateQueriesFromMutationData', () => {
         dataManager.queryClient.setQueryData(queryKey, [{id: '1', name: 'Old'}], {
             updatedAt: originalUpdatedAt,
         });
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old'}]);
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old'}]);
 
         // Update data
         const mutationData: Data = {id: '1', name: 'New'};
@@ -106,9 +96,7 @@ describe('updateQueriesFromMutationData', () => {
     });
 
     it('should preserve error state on update', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey = ['users'];
         const error = new Error('Test error');
@@ -118,7 +106,7 @@ describe('updateQueriesFromMutationData', () => {
         const cachedQuery = dataManager.queryClient.getQueryCache().find({queryKey});
         cachedQuery?.setState({error, status: 'error'});
 
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old'}]);
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old'}]);
 
         // Update data
         const mutationData: Data = {id: '1', name: 'New'};
@@ -131,9 +119,7 @@ describe('updateQueriesFromMutationData', () => {
     });
 
     it('should preserve isInvalidated flag on update', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey = ['users'];
 
@@ -141,7 +127,7 @@ describe('updateQueriesFromMutationData', () => {
         dataManager.queryClient.setQueryData(queryKey, [{id: '1', name: 'Old'}]);
         dataManager.queryClient.invalidateQueries({queryKey});
 
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old'}]);
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey), [{id: '1', name: 'Old'}]);
 
         const cachedQueryBefore = dataManager.queryClient.getQueryCache().find({queryKey});
         const isInvalidatedBefore = cachedQueryBefore?.state.isInvalidated;
@@ -156,9 +142,7 @@ describe('updateQueriesFromMutationData', () => {
     });
 
     it('should work correctly with nested objects', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const queryKey = ['posts'];
         const initialData = [
@@ -170,7 +154,7 @@ describe('updateQueriesFromMutationData', () => {
         ];
 
         dataManager.queryClient.setQueryData(queryKey, initialData);
-        dataManager.normalizer.setQuery(JSON.stringify(queryKey), initialData);
+        dataManager.normalizer!.setQuery(JSON.stringify(queryKey), initialData);
 
         // Update author
         const mutationData: Data = {id: '10', name: 'Updated Author'};
@@ -186,9 +170,7 @@ describe('updateQueriesFromMutationData', () => {
     });
 
     it('should not throw if query is not in cache', () => {
-        if (!dataManager.normalizer) {
-            throw new Error('Normalizer should be initialized');
-        }
+        expect(dataManager.normalizer).toBeDefined();
 
         const mutationData: Data = {id: '1', name: 'New'};
 

@@ -24,9 +24,4 @@ export {ClientDataManager} from './ClientDataManager';
 
 export {DataSourceProvider} from './DataSourceProvider';
 
-export {QueryNormalizerProvider, useQueryNormalizer} from './normalize/QueryNormalizerProvider';
-export type {
-    OptimisticUpdateConfig,
-    DataSourceNormalizerConfig,
-    OptionsNormalizerConfig,
-} from './types/normalizer';
+export type {OptimisticConfig} from './types/normalizer';
