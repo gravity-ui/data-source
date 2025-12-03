@@ -3,17 +3,46 @@ import type {QueryClient, QueryKey} from '@tanstack/react-query';
 
 import type {Normalizer, NormalizerConfig} from '../../core/types/Normalizer';
 import type {OptimisticConfig} from '../types/normalizer';
-import type {QueryCustomOptions} from '../types/options';
+import type {QueryDataAdditionalOptions} from '../types/options';
+
+interface QueryNormalizeOptions {
+    normalize?: boolean;
+    optimistic?: boolean | OptimisticConfig;
+    invalidate?: boolean;
+}
+
+const shouldInvalidateData = (globalConfig?: boolean, mutationConfig?: boolean): boolean => {
+    if (mutationConfig === false) {
+        return false;
+    }
+
+    if (!globalConfig) {
+        return false;
+    }
+
+    return true;
+};
 
 const shouldUpdateOptimistically = (
-    providerConfig?: boolean | OptimisticConfig,
+    globalConfig?: boolean | OptimisticConfig,
     mutationConfig?: boolean | OptimisticConfig,
 ): boolean => {
-    if (providerConfig || mutationConfig) {
+    if (mutationConfig === false) {
+        return false;
+    }
+
+    if (
+        (typeof mutationConfig === 'boolean' && mutationConfig) ||
+        (typeof mutationConfig === 'object' && mutationConfig)
+    ) {
         return true;
     }
 
-    return false;
+    if (!globalConfig) {
+        return false;
+    }
+
+    return true;
 };
 
 const getOptimisticProps = (
@@ -39,6 +68,7 @@ export const createQueryNormalizer = (
     queryClient: QueryClient,
     config: boolean | NormalizerConfig | undefined,
     optimisticUpdate: (mutationData: Data) => void,
+    invalidateData: (data: Data) => void,
 ) => {
     if (!normalizer || !config) {
         return undefined;
@@ -46,6 +76,9 @@ export const createQueryNormalizer = (
 
     const globalOptimistic =
         typeof config === 'object' && 'optimistic' in config ? config.optimistic : false;
+
+    const globalInvalidateData =
+        typeof config === 'object' && 'invalidate' in config ? config.invalidate : false;
 
     let unsubscribeQueryCache: (() => void) | null = null;
     let unsubscribeMutationCache: (() => void) | null = null;
@@ -81,9 +114,9 @@ export const createQueryNormalizer = (
 
                 // Check if the query should be normalized
                 // At this point options are already merged (DataSource + Hook)
-                const queryOptions = event.query.options as QueryCustomOptions;
+                const queryOptions = event.query.options as QueryDataAdditionalOptions;
 
-                const queryNormalize = queryOptions?.normalize;
+                const queryNormalize = queryOptions?.normalize ?? true;
 
                 if (!queryNormalize) {
                     return;
@@ -103,10 +136,23 @@ export const createQueryNormalizer = (
             // Subscribe to MutationCache for normalization + optimistic updates
             unsubscribeMutationCache = queryClient.getMutationCache().subscribe((event) => {
                 // Cast to extended type with additional configs, if available
-                const mutationOptions = event.mutation?.options as QueryCustomOptions | undefined;
+                const mutationOptions = event.mutation?.options as
+                    | QueryNormalizeOptions
+                    | undefined;
 
                 const mutationQueryNormalize = mutationOptions?.normalize;
                 const mutationQueryOptimistic = mutationOptions?.optimistic;
+                const mutationQueryInvalidateData = mutationOptions?.invalidate;
+
+                if (shouldInvalidateData(globalInvalidateData, mutationQueryInvalidateData)) {
+                    if (
+                        event.type === 'updated' &&
+                        event.action.type === 'success' &&
+                        event.action.data
+                    ) {
+                        invalidateData(event.action.data as Data);
+                    }
+                }
 
                 if (
                     !mutationQueryNormalize ||

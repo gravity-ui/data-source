@@ -124,7 +124,7 @@ describe('Normalization Configuration Integration', () => {
             expect(normalized.objects['@@2']).toBeUndefined();
         });
 
-        it('should NOT normalize when normalize option is not provided', async () => {
+        it('should normalize by default when normalize option is not provided', async () => {
             dataManager.queryNormalizer!.subscribe();
 
             const queryKey = ['users-default'];
@@ -136,8 +136,8 @@ describe('Normalization Configuration Integration', () => {
 
             const normalized = dataManager.queryNormalizer!.getNormalizedData();
 
-            // Data should NOT be normalized (default behavior)
-            expect(normalized.objects['@@3']).toBeUndefined();
+            // Data SHOULD be normalized (default behavior is now true)
+            expect(normalized.objects['@@3']).toBeDefined();
         });
     });
 
@@ -248,6 +248,37 @@ describe('Normalization Configuration Integration', () => {
             expect(dmWithOptimisticConfig.normalizer).toBeDefined();
 
             dmWithOptimisticConfig.queryClient.clear();
+        });
+    });
+
+    describe('Invalidate configuration', () => {
+        it('should support invalidate option in global config', async () => {
+            const dmWithInvalidate = new ClientDataManager({
+                normalizerConfig: {
+                    devLogging: false,
+                    invalidate: true,
+                },
+            });
+
+            expect(dmWithInvalidate.queryNormalizer).toBeDefined();
+            expect(dmWithInvalidate.normalizer).toBeDefined();
+
+            dmWithInvalidate.queryClient.clear();
+        });
+
+        it('should support both optimistic and invalidate options', async () => {
+            const dmWithBoth = new ClientDataManager({
+                normalizerConfig: {
+                    devLogging: false,
+                    optimistic: true,
+                    invalidate: true,
+                },
+            });
+
+            expect(dmWithBoth.queryNormalizer).toBeDefined();
+            expect(dmWithBoth.normalizer).toBeDefined();
+
+            dmWithBoth.queryClient.clear();
         });
     });
 });

@@ -555,5 +555,113 @@ describe('subscriptions', () => {
             dmNoAutoRollback.queryNormalizer!.unsubscribe();
             dmNoAutoRollback.queryClient.clear();
         });
+
+        it('should invalidate queries when invalidate option is enabled', async () => {
+            const dmWithInvalidate = new ClientDataManager({
+                defaultOptions: {
+                    queries: {retry: false},
+                    mutations: {retry: false},
+                },
+                normalizerConfig: {
+                    devLogging: false,
+                    invalidate: true,
+                },
+            });
+
+            expect(dmWithInvalidate.queryNormalizer).toBeDefined();
+
+            dmWithInvalidate.queryNormalizer!.subscribe();
+
+            const queryKey = ['users'];
+
+            // Initial data
+            await dmWithInvalidate.queryClient.fetchQuery({
+                queryKey,
+                queryFn: async () => [{id: '1', name: 'Original'}],
+            });
+
+            // Spy on invalidateQueries
+            const invalidateSpy = jest.spyOn(dmWithInvalidate.queryClient, 'invalidateQueries');
+
+            const wrapper = ({children}: {children: React.ReactNode}) => (
+                <DataSourceProvider dataManager={dmWithInvalidate}>{children}</DataSourceProvider>
+            );
+
+            const {result: mutationResult} = renderHook(
+                () =>
+                    useMutation({
+                        mutationFn: async () => ({id: '1', name: 'Updated'}),
+                        normalize: true,
+                    } as Parameters<typeof useMutation>[0] & {
+                        normalize: boolean;
+                    }),
+                {wrapper},
+            );
+
+            mutationResult.current.mutate(undefined);
+
+            await waitFor(() => expect(mutationResult.current.isSuccess).toBe(true));
+
+            // Verify that invalidateQueries was called
+            expect(invalidateSpy).toHaveBeenCalled();
+
+            invalidateSpy.mockRestore();
+            dmWithInvalidate.queryNormalizer!.unsubscribe();
+            dmWithInvalidate.queryClient.clear();
+        });
+
+        it('should not invalidate queries when invalidate: false is set on mutation', async () => {
+            const dmWithInvalidate = new ClientDataManager({
+                defaultOptions: {
+                    queries: {retry: false},
+                    mutations: {retry: false},
+                },
+                normalizerConfig: {
+                    devLogging: false,
+                    invalidate: true, // Globally enabled
+                },
+            });
+
+            expect(dmWithInvalidate.queryNormalizer).toBeDefined();
+
+            dmWithInvalidate.queryNormalizer!.subscribe();
+
+            const queryKey = ['users'];
+
+            await dmWithInvalidate.queryClient.fetchQuery({
+                queryKey,
+                queryFn: async () => [{id: '1', name: 'Original'}],
+            });
+
+            const invalidateSpy = jest.spyOn(dmWithInvalidate.queryClient, 'invalidateQueries');
+
+            const wrapper = ({children}: {children: React.ReactNode}) => (
+                <DataSourceProvider dataManager={dmWithInvalidate}>{children}</DataSourceProvider>
+            );
+
+            const {result: mutationResult} = renderHook(
+                () =>
+                    useMutation({
+                        mutationFn: async () => ({id: '1', name: 'Updated'}),
+                        normalize: true,
+                        invalidate: false, // Disable for this mutation
+                    } as Parameters<typeof useMutation>[0] & {
+                        normalize: boolean;
+                        invalidate: boolean;
+                    }),
+                {wrapper},
+            );
+
+            mutationResult.current.mutate(undefined);
+
+            await waitFor(() => expect(mutationResult.current.isSuccess).toBe(true));
+
+            // Verify that invalidateQueries was NOT called
+            expect(invalidateSpy).not.toHaveBeenCalled();
+
+            invalidateSpy.mockRestore();
+            dmWithInvalidate.queryNormalizer!.unsubscribe();
+            dmWithInvalidate.queryClient.clear();
+        });
     });
 });

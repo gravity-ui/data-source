@@ -6,6 +6,7 @@ import type {OptimisticConfig} from '../../react-query/types/normalizer';
 export interface NormalizerConfig extends NormalizeConfigBase {
     initialData?: NormalizedData;
     optimistic?: boolean | OptimisticConfig;
+    invalidate?: boolean;
 }
 
 export interface Normalizer {

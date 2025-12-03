@@ -15,11 +15,10 @@ export interface QueryDataAdditionalOptions<
      * It is recommended to use idle as query parameters to control query state.
      */
     enabled?: boolean;
-}
-
-export interface QueryCustomOptions {
     /** Normalization configuration (enable/disable) */
     normalize?: boolean;
     /** Optimistic data update configuration */
     optimistic?: boolean | OptimisticConfig;
+    /** Invalidate data configuration */
+    invalidate?: boolean;
 }

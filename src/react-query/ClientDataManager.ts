@@ -49,6 +49,7 @@ export class ClientDataManager implements DataManager {
             this.queryClient,
             config.normalizerConfig,
             (data) => this.optimisticUpdate(data),
+            (data) => this.invalidateData(data),
         );
     }
 
