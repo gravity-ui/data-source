@@ -21,3 +21,7 @@ export {getProgressiveRefetch} from './utils/getProgressiveRefetch';
 
 export type {ClientDataManagerConfig} from './ClientDataManager';
 export {ClientDataManager} from './ClientDataManager';
+
+export {DataSourceProvider} from './DataSourceProvider';
+
+export type {QueryNormalizer} from './types/normalizer';

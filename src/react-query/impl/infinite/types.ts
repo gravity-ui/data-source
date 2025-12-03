@@ -6,7 +6,7 @@ import type {
     QueryFunctionContext,
     QueryKey,
 } from '@tanstack/react-query';
-import type {Overwrite} from 'utility-types';
+import type {Assign, Overwrite} from 'utility-types';
 
 import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
 import type {QueryDataSourceContext} from '../../types/base';
@@ -19,7 +19,7 @@ export type InfiniteQueryObserverExtendedOptions<
     TQueryData = TQueryFnData,
     TQueryKey extends QueryKey = QueryKey,
     TPageParam = unknown,
-> = Overwrite<
+> = Assign<
     InfiniteQueryObserverOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
     QueryDataAdditionalOptions<
         TQueryFnData,

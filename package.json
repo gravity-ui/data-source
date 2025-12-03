@@ -43,6 +43,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@normy/core": "^0.14.0",
     "utility-types": "^3.11.0"
   },
   "devDependencies": {
