@@ -29,4 +29,6 @@ export interface QueryCustomOptions {
     normalize?: boolean;
     /** Optimistic data update configuration */
     optimistic?: boolean | OptimisticConfig;
+    /** Invalidate data configuration */
+    invalidate?: boolean;
 }

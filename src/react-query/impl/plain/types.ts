@@ -9,7 +9,7 @@ import type {Assign, Overwrite} from 'utility-types';
 
 import type {ActualData, DataLoaderStatus, DataSource, DataSourceKey} from '../../../core';
 import type {QueryDataSourceContext} from '../../types/base';
-import type {QueryCustomOptions, QueryDataAdditionalOptions} from '../../types/options';
+import type {QueryDataAdditionalOptions} from '../../types/options';
 
 export type QueryObserverExtendedOptions<
     TQueryFnData = unknown,
