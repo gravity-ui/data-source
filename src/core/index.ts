@@ -18,7 +18,7 @@ export type {
 export type {DataManager} from './types/DataManager';
 export type {DataLoaderStatus} from './types/DataLoaderStatus';
 export type {InvalidateRepeatOptions, InvalidateOptions} from './types/DataManagerOptions';
-export type {Normalizer, NormalizerConfig} from './types/Normalizer';
+export type {Normalizer, NormalizerConfig, OptimisticConfig} from './types/Normalizer';
 
 export {idle} from './constants';
 

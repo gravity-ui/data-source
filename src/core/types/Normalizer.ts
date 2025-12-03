@@ -1,7 +1,12 @@
 import type {NormalizerConfig as NormalizeConfigBase} from '@normy/core';
 import type {Data, NormalizedData} from '@normy/core/types/types';
 
-import type {OptimisticConfig} from '../../react-query/types/normalizer';
+export interface OptimisticConfig {
+    /** Automatically calculate rollback data, defaults to true */
+    autoCalculateRollback?: boolean;
+    /** Whether debug logging is enabled */
+    devLogging?: boolean;
+}
 
 export interface NormalizerConfig extends NormalizeConfigBase {
     initialData?: NormalizedData;

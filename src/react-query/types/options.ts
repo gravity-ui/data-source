@@ -1,6 +1,7 @@
 import type {DefaultError, QueryKey} from '@tanstack/react-query';
 
-import type {OptimisticConfig} from './normalizer';
+import type {OptimisticConfig} from '../../core/types/Normalizer';
+
 import type {RefetchInterval} from './refetch-interval';
 
 export interface QueryDataAdditionalOptions<

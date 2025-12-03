@@ -1,8 +1,7 @@
 import type {Data} from '@normy/core';
 import type {QueryClient, QueryKey} from '@tanstack/react-query';
 
-import type {Normalizer, NormalizerConfig} from '../../core/types/Normalizer';
-import type {OptimisticConfig} from '../types/normalizer';
+import type {Normalizer, NormalizerConfig, OptimisticConfig} from '../../core/types/Normalizer';
 import type {QueryDataAdditionalOptions} from '../types/options';
 
 interface QueryNormalizeOptions {

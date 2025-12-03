@@ -1,12 +1,5 @@
 import type {Data, NormalizedData} from '@normy/core/types/types';
 
-export interface OptimisticConfig {
-    /** Automatically calculate rollback data, defaults to true */
-    autoCalculateRollback?: boolean;
-    /** Whether debug logging is enabled */
-    devLogging?: boolean;
-}
-
 export interface QueryNormalizer {
     /** Get normalized data */
     getNormalizedData: () => NormalizedData;
