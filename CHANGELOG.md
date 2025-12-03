@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://github.com/gravity-ui/data-source/compare/v0.7.0...v0.8.0) (2025-12-03)
+
+
+### Features
+
+* add normalize ([#40](https://github.com/gravity-ui/data-source/issues/40)) ([70b9dd4](https://github.com/gravity-ui/data-source/commit/70b9dd40755c9e1f329f4c7743d3edba3f97e6f0))
+
+
+### Bug Fixes
+
+* do not manual refetch disabled queries ([#37](https://github.com/gravity-ui/data-source/issues/37)) ([16f57eb](https://github.com/gravity-ui/data-source/commit/16f57eb7f46cad6960585d89d4b29621a52f4ba3))
+
 ## [0.7.0](https://github.com/gravity-ui/data-source/compare/v0.6.1...v0.7.0) (2025-06-02)
 
 
