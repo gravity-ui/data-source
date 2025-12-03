@@ -57,6 +57,11 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
         return transformResponse ? transformResponse(actualResponse) : actualResponse;
     };
 
+    const meta = {
+        invalidate: options?.invalidate,
+        optimistic: options?.optimistic,
+    };
+
     return {
         queryKey: composeFullKey(dataSource, params),
         queryFn: params === idle ? skipToken : queryFn,
@@ -64,6 +69,7 @@ export const composeOptions = <TDataSource extends AnyInfiniteQueryDataSource>(
         initialPageParam: EMPTY_OBJECT,
         getNextPageParam: next,
         getPreviousPageParam: prev,
+        meta,
         ...dataSource.options,
         ...options,
     };

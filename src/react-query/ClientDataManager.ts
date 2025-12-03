@@ -26,8 +26,11 @@ export class ClientDataManager implements DataManager {
     readonly queryClient: QueryClient;
     readonly normalizer?: Normalizer | undefined;
     readonly queryNormalizer?: QueryNormalizer | undefined;
+    readonly normalizerConfig?: NormalizerConfig | boolean;
 
     constructor(config: ClientDataManagerConfig = {}) {
+        this.normalizerConfig = config.normalizerConfig;
+
         this.queryClient = new QueryClient({
             ...config,
             defaultOptions: {
@@ -88,6 +91,38 @@ export class ClientDataManager implements DataManager {
         queriesToUpdate.forEach((query) => {
             const queryKey = JSON.parse(query.queryKey) as QueryKey;
             this.queryClient.invalidateQueries({queryKey});
+        });
+    }
+
+    update(data: Data) {
+        if (!this.normalizer) {
+            return;
+        }
+
+        const {optimistic: globalOptimistic, invalidate: globalInvalidate} =
+            typeof this.normalizerConfig === 'object'
+                ? this.normalizerConfig
+                : {optimistic: false, invalidate: false};
+        const queriesToUpdate = this.normalizer.getQueriesToUpdate(data);
+
+        queriesToUpdate.forEach((query) => {
+            const queryKey = JSON.parse(query.queryKey) as QueryKey;
+
+            const cachedQuery = this.queryClient.getQueryCache().find({queryKey});
+
+            const {optimistic, invalidate} = cachedQuery?.meta ?? {};
+
+            if (optimistic === true) {
+                this.optimisticUpdate(data);
+            } else if (optimistic === undefined && globalOptimistic === true) {
+                this.optimisticUpdate(data);
+            }
+
+            if (invalidate === true) {
+                this.invalidateData(data);
+            } else if (invalidate === undefined && globalInvalidate === true) {
+                this.invalidateData(data);
+            }
         });
     }
 
