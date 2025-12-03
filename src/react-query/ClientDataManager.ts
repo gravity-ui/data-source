@@ -103,6 +103,7 @@ export class ClientDataManager implements DataManager {
             typeof this.normalizerConfig === 'object'
                 ? this.normalizerConfig
                 : {optimistic: false, invalidate: false};
+
         const queriesToUpdate = this.normalizer.getQueriesToUpdate(data);
 
         queriesToUpdate.forEach((query) => {
@@ -112,15 +113,11 @@ export class ClientDataManager implements DataManager {
 
             const {optimistic, invalidate} = cachedQuery?.meta ?? {};
 
-            if (optimistic === true) {
-                this.optimisticUpdate(data);
-            } else if (optimistic === undefined && globalOptimistic === true) {
+            if (optimistic === true || (optimistic === undefined && globalOptimistic === true)) {
                 this.optimisticUpdate(data);
             }
 
-            if (invalidate === true) {
-                this.invalidateData(data);
-            } else if (invalidate === undefined && globalInvalidate === true) {
+            if (invalidate === true || (invalidate === undefined && globalInvalidate === true)) {
                 this.invalidateData(data);
             }
         });
