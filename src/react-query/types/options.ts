@@ -23,12 +23,3 @@ export interface QueryDataAdditionalOptions<
     /** Invalidate data configuration */
     invalidate?: boolean;
 }
-
-export interface QueryCustomOptions {
-    /** Normalization configuration (enable/disable) */
-    normalize?: boolean;
-    /** Optimistic data update configuration */
-    optimistic?: boolean | OptimisticConfig;
-    /** Invalidate data configuration */
-    invalidate?: boolean;
-}
