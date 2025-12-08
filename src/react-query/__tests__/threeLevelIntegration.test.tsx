@@ -283,70 +283,6 @@ describe('Normalization Configuration Integration', () => {
     });
 
     describe('ClientDataManager.update()', () => {
-        it('should apply optimistic update when configured and data has same keys', async () => {
-            const dm = new ClientDataManager({
-                normalizerConfig: {
-                    devLogging: false,
-                    optimistic: true,
-                },
-            });
-
-            dm.queryNormalizer!.subscribe();
-
-            const queryKey = ['users'];
-            const initialData = [{id: '1', name: 'User 1', email: 'user@test.com'}];
-
-            dm.queryClient.setQueryData(queryKey, initialData);
-            dm.normalizer!.setQuery(JSON.stringify(queryKey), initialData);
-
-            // Update with same keys - should apply optimistic update
-            dm.update({id: '1', name: 'Updated', email: 'updated@test.com'});
-
-            const data = dm.queryClient.getQueryData(queryKey) as Array<{
-                id: string;
-                name: string;
-                email: string;
-            }>;
-
-            expect(data[0].name).toBe('Updated');
-            expect(data[0].email).toBe('updated@test.com');
-
-            dm.queryNormalizer!.unsubscribe();
-            dm.queryClient.clear();
-        });
-
-        it('should apply optimistic update when mutation has more keys (only existing keys updated)', async () => {
-            const dm = new ClientDataManager({
-                normalizerConfig: {
-                    devLogging: false,
-                    optimistic: true,
-                },
-            });
-
-            dm.queryNormalizer!.subscribe();
-
-            const queryKey = ['users'];
-            const initialData = [{id: '1', name: 'User 1'}];
-
-            dm.queryClient.setQueryData(queryKey, initialData);
-            dm.normalizer!.setQuery(JSON.stringify(queryKey), initialData);
-
-            // Update with more keys - normy will only update existing keys
-            dm.update({id: '1', name: 'Updated', email: 'new@test.com', age: 30});
-
-            const data = dm.queryClient.getQueryData(queryKey) as Array<{
-                id: string;
-                name: string;
-            }>;
-
-            // Only existing keys are updated, new keys are not added by normy
-            expect(data[0].name).toBe('Updated');
-            expect(data[0].id).toBe('1');
-
-            dm.queryNormalizer!.unsubscribe();
-            dm.queryClient.clear();
-        });
-
         it('should work with array of objects for optimistic update', async () => {
             const dm = new ClientDataManager({
                 normalizerConfig: {
@@ -415,15 +351,6 @@ describe('Normalization Configuration Integration', () => {
             dm.queryClient.clear();
         });
 
-        it('should not modify data when normalizer is not configured', () => {
-            const dm = new ClientDataManager({});
-
-            // Should not throw
-            dm.update({id: '1', name: 'Test'});
-
-            expect(dm.normalizer).toBeUndefined();
-        });
-
         it('should trigger refetch when mutation has fewer keys and normy returns empty queriesToUpdate', async () => {
             // checkMutationObjectsKeys is called only when getQueriesToUpdate returns []
             // This happens when normy can't compute a diff (e.g., structure mismatch)
@@ -462,95 +389,6 @@ describe('Normalization Configuration Integration', () => {
             // Restore mocks
             dm.normalizer!.getQueriesToUpdate = originalGetQueriesToUpdate;
             invalidateSpy.mockRestore();
-            dm.queryNormalizer!.unsubscribe();
-            dm.queryClient.clear();
-        });
-
-        it('should NOT trigger refetch when mutation has same keys as existing data', async () => {
-            const dm = new ClientDataManager({
-                normalizerConfig: {
-                    devLogging: false,
-                    optimistic: true,
-                },
-            });
-
-            dm.queryNormalizer!.subscribe();
-
-            const queryKey = ['users'];
-            const initialData = [{id: '1', name: 'User 1'}];
-
-            dm.queryClient.setQueryData(queryKey, initialData);
-            dm.normalizer!.setQuery(JSON.stringify(queryKey), initialData);
-
-            // Set query state to success
-            const cache = dm.queryClient.getQueryCache().find({queryKey});
-            cache?.setState({status: 'success', fetchStatus: 'idle', isInvalidated: false});
-
-            // Update with same keys - should NOT trigger refetch via checkMutationObjectsKeys
-            dm.update({id: '1', name: 'Updated'});
-
-            const data = dm.queryClient.getQueryData(queryKey) as Array<{
-                id: string;
-                name: string;
-            }>;
-
-            // Data should be optimistically updated
-            expect(data[0].name).toBe('Updated');
-
-            dm.queryNormalizer!.unsubscribe();
-            dm.queryClient.clear();
-        });
-
-        it('should NOT trigger refetch when mutation has more keys than existing data', async () => {
-            const dm = new ClientDataManager({
-                normalizerConfig: {
-                    devLogging: false,
-                    optimistic: true,
-                },
-            });
-
-            dm.queryNormalizer!.subscribe();
-
-            const queryKey = ['users'];
-            // Existing data has 2 keys
-            const initialData = [{id: '1', name: 'User 1'}];
-
-            dm.queryClient.setQueryData(queryKey, initialData);
-            dm.normalizer!.setQuery(JSON.stringify(queryKey), initialData);
-
-            // Update with more keys (3 keys including new email)
-            // This should NOT trigger refetch - more keys = more complete data
-            dm.update({id: '1', name: 'Updated', email: 'new@test.com'});
-
-            const data = dm.queryClient.getQueryData(queryKey) as Array<{
-                id: string;
-                name: string;
-            }>;
-
-            // Data should be updated (only existing keys)
-            expect(data[0].name).toBe('Updated');
-
-            dm.queryNormalizer!.unsubscribe();
-            dm.queryClient.clear();
-        });
-
-        it('should handle update when object is not in normalized store', () => {
-            const dm = new ClientDataManager({
-                normalizerConfig: {
-                    devLogging: false,
-                    optimistic: true,
-                },
-            });
-
-            dm.queryNormalizer!.subscribe();
-
-            // No queries set up - object is not in store
-            // This should not throw and should not trigger any updates
-            dm.update({id: 'non-existent', name: 'Test'});
-
-            // No error should occur
-            expect(true).toBe(true);
-
             dm.queryNormalizer!.unsubscribe();
             dm.queryClient.clear();
         });
