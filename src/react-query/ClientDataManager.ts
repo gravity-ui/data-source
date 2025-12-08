@@ -16,7 +16,9 @@ import {
 import type {InvalidateOptions, InvalidateRepeatOptions} from '../core/types/DataManagerOptions';
 
 import type {QueryNormalizer} from './types/normalizer';
+import {checkMutationObjectsKeys} from './utils/checkMutationObjectsKeys';
 import {createQueryNormalizer} from './utils/normalize';
+import {parseQueryKey} from './utils/parseQueryKey';
 
 export interface ClientDataManagerConfig extends QueryClientConfig {
     normalizerConfig?: NormalizerConfig | boolean;
@@ -26,8 +28,11 @@ export class ClientDataManager implements DataManager {
     readonly queryClient: QueryClient;
     readonly normalizer?: Normalizer | undefined;
     readonly queryNormalizer?: QueryNormalizer | undefined;
+    readonly normalizerConfig?: NormalizerConfig | boolean;
 
     constructor(config: ClientDataManagerConfig = {}) {
+        this.normalizerConfig = config.normalizerConfig;
+
         this.queryClient = new QueryClient({
             ...config,
             defaultOptions: {
@@ -53,41 +58,98 @@ export class ClientDataManager implements DataManager {
         );
     }
 
-    optimisticUpdate(mutationData: Data) {
+    optimisticUpdate(mutationData: Data, queryKey?: QueryKey, queryData?: Data) {
         if (!this.normalizer) {
+            return;
+        }
+
+        if (queryKey && queryData) {
+            this.optimisticUpdateQuery(queryKey, queryData);
+
             return;
         }
 
         const queriesToUpdate = this.normalizer.getQueriesToUpdate(mutationData);
 
         queriesToUpdate.forEach((query) => {
-            const queryKey = JSON.parse(query.queryKey) as QueryKey;
+            const parsedQueryKey = parseQueryKey(query.queryKey);
 
-            const cachedQuery = this.queryClient.getQueryCache().find({queryKey});
-
-            const dataUpdatedAt = cachedQuery?.state.dataUpdatedAt;
-            const isInvalidated = cachedQuery?.state.isInvalidated;
-            const error = cachedQuery?.state.error;
-            const status = cachedQuery?.state.status;
-
-            this.queryClient.setQueryData(queryKey, () => query.data, {
-                updatedAt: dataUpdatedAt,
-            });
-
-            cachedQuery?.setState({isInvalidated, error, status});
+            this.optimisticUpdateQuery(parsedQueryKey, query.data);
         });
     }
 
-    invalidateData(data: Data): void {
+    invalidateData(data: Data, queryKey?: QueryKey): void {
         if (!this.normalizer) {
+            return;
+        }
+
+        if (queryKey) {
+            this.invalidateQuery(queryKey);
+
             return;
         }
 
         const queriesToUpdate = this.normalizer.getQueriesToUpdate(data);
 
         queriesToUpdate.forEach((query) => {
-            const queryKey = JSON.parse(query.queryKey) as QueryKey;
-            this.queryClient.invalidateQueries({queryKey});
+            const parsedQueryKey = parseQueryKey(query.queryKey);
+
+            this.invalidateQuery(parsedQueryKey);
+        });
+    }
+
+    update(data: Data) {
+        if (!this.normalizer) {
+            return;
+        }
+
+        const {optimistic: globalOptimistic, invalidate: globalInvalidate} =
+            typeof this.normalizerConfig === 'object'
+                ? this.normalizerConfig
+                : {optimistic: false, invalidate: false};
+
+        const queriesToUpdate = this.normalizer.getQueriesToUpdate(data);
+
+        if (queriesToUpdate.length === 0) {
+            const completeness = checkMutationObjectsKeys(data, this.normalizer);
+            const dependentQueries = this.normalizer.getDependentQueries(data);
+
+            if (completeness.needsRefetch) {
+                dependentQueries.forEach((queryKeyString) => {
+                    const parsedQueryKey = parseQueryKey(queryKeyString);
+
+                    const cachedQuery = this.queryClient
+                        .getQueryCache()
+                        .find({queryKey: parsedQueryKey});
+
+                    const {invalidate} = cachedQuery?.meta ?? {};
+
+                    if (
+                        invalidate === true ||
+                        (invalidate === undefined && globalInvalidate === true)
+                    ) {
+                        this.invalidateData(data, parsedQueryKey);
+                    }
+                });
+            }
+
+            return;
+        }
+
+        queriesToUpdate.forEach((query) => {
+            const parsedQueryKey = parseQueryKey(query.queryKey);
+
+            const cachedQuery = this.queryClient.getQueryCache().find({queryKey: parsedQueryKey});
+
+            const {optimistic, invalidate} = cachedQuery?.meta ?? {};
+
+            if (optimistic === true || (optimistic === undefined && globalOptimistic === true)) {
+                this.optimisticUpdate(data, parsedQueryKey, query.data);
+            }
+
+            if (invalidate === true || (invalidate === undefined && globalInvalidate === true)) {
+                this.invalidateData(data, parsedQueryKey);
+            }
         });
     }
 
@@ -200,5 +262,32 @@ export class ClientDataManager implements DataManager {
         }
 
         return createNormalizer(config);
+    }
+
+    private invalidateQuery(queryKey: QueryKey) {
+        const cachedQuery = this.queryClient.getQueryCache().find({queryKey});
+
+        if (
+            cachedQuery?.state.fetchStatus !== 'fetching' &&
+            cachedQuery?.state.status === 'success' &&
+            !cachedQuery?.state.isInvalidated
+        ) {
+            this.queryClient.invalidateQueries({queryKey});
+        }
+    }
+
+    private optimisticUpdateQuery(queryKey: QueryKey, queryData: Data) {
+        const cachedQuery = this.queryClient.getQueryCache().find({queryKey});
+
+        const dataUpdatedAt = cachedQuery?.state.dataUpdatedAt;
+        const isInvalidated = cachedQuery?.state.isInvalidated;
+        const error = cachedQuery?.state.error;
+        const status = cachedQuery?.state.status;
+
+        this.queryClient.setQueryData(queryKey, () => queryData, {
+            updatedAt: dataUpdatedAt,
+        });
+
+        cachedQuery?.setState({isInvalidated, error, status});
     }
 }

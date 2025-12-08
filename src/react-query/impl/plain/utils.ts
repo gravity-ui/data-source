@@ -50,10 +50,16 @@ export const composeOptions = <TDataSource extends AnyPlainQueryDataSource>(
         return transformResponse ? transformResponse(actualResponse) : actualResponse;
     };
 
+    const meta = {
+        invalidate: options?.invalidate,
+        optimistic: options?.optimistic,
+    };
+
     return {
         queryKey: composeFullKey(dataSource, params),
         queryFn: params === idle ? skipToken : queryFn,
         select,
+        meta,
         ...dataSource.options,
         ...options,
     };
