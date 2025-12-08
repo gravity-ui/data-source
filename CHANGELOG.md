@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/gravity-ui/data-source/compare/v0.8.0...v0.8.1) (2025-12-08)
+
+
+### Bug Fixes
+
+* normy fix add update function ([#41](https://github.com/gravity-ui/data-source/issues/41)) ([74d8cce](https://github.com/gravity-ui/data-source/commit/74d8ccec6b0a0221b38d2411b305b964171a9d26))
+
 ## [0.8.0](https://github.com/gravity-ui/data-source/compare/v0.7.0...v0.8.0) (2025-12-03)
 
 
