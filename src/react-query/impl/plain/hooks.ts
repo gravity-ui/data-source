@@ -1,4 +1,4 @@
-import {type QueryObserverOptions, skipToken, useQuery} from '@tanstack/react-query';
+import {type QueryObserverOptions, useQuery} from '@tanstack/react-query';
 
 import type {
     DataSourceContext,
@@ -12,7 +12,6 @@ import type {
 } from '../../../core';
 import {useRefetchInterval} from '../../hooks/useRefetchInterval';
 import {normalizeStatus} from '../../utils/normalizeStatus';
-import {warnDisabledRefetch} from '../../utils/warnDisabledRefetch';
 
 import type {AnyPlainQueryDataSource, QueryObserverExtendedOptions} from './types';
 import {composeOptions} from './utils';
@@ -53,12 +52,9 @@ export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
     const composedOptions = usePlainQueryDataOptions(extendedOptions);
     const state = useQuery(composedOptions);
 
-    const isDisabled = composedOptions.enabled === false || composedOptions.queryFn === skipToken;
-
     return {
         ...state,
         status: normalizeStatus(state.status, state.fetchStatus),
         originalStatus: state.status,
-        refetch: isDisabled ? warnDisabledRefetch : state.refetch,
     } as DataSourceState<TDataSource>;
 };
