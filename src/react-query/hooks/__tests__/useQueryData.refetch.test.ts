@@ -104,14 +104,17 @@ describe('useQueryData refetch behavior', () => {
             fetch: jest.fn().mockResolvedValue({data: 'test-data'}),
         };
 
-        it('should use original refetch when no enabled option', () => {
-            const originalRefetch = jest.fn();
+        it('should wrap refetch when no enabled option', async () => {
+            const originalRefetch = jest.fn().mockResolvedValue({data: 'test', status: 'success'});
             mockUseQuery.mockReturnValue(createMockQueryResult(originalRefetch) as any);
 
             const {result} = renderHook(() => useQueryData(plainDataSource, {id: 1}));
 
-            expect(result.current.refetch).toBe(originalRefetch);
+            expect(result.current.refetch).not.toBe(originalRefetch);
             expect(result.current.refetch).not.toBe(mockWarnDisabledRefetch);
+
+            await result.current.refetch();
+            expect(originalRefetch).toHaveBeenCalledTimes(1);
         });
 
         it('should use warnDisabledRefetch when enabled: false', () => {
@@ -145,14 +148,20 @@ describe('useQueryData refetch behavior', () => {
             next: jest.fn(),
         };
 
-        it('should use original refetch when no enabled option', () => {
-            const originalRefetch = jest.fn();
+        it('should wrap refetch when no enabled option', async () => {
+            const originalRefetch = jest.fn().mockResolvedValue({
+                data: {pages: [], pageParams: []},
+                status: 'success',
+            });
             mockUseInfiniteQuery.mockReturnValue(createMockInfiniteResult(originalRefetch) as any);
 
             const {result} = renderHook(() => useQueryData(infiniteDataSource, {id: 1}));
 
-            expect(result.current.refetch).toBe(originalRefetch);
+            expect(result.current.refetch).not.toBe(originalRefetch);
             expect(result.current.refetch).not.toBe(mockWarnDisabledRefetch);
+
+            await result.current.refetch();
+            expect(originalRefetch).toHaveBeenCalledTimes(1);
         });
 
         it('should use warnDisabledRefetch when enabled: false', () => {

@@ -53,5 +53,11 @@ export type AnyPlainQueryDataSource = PlainQueryDataSource<any, any, any, any, a
 
 type ResultWrapper<TResult, TResponse, TData, TError> =
     TResult extends QueryObserverResult<ActualData<TData, TResponse>, TError>
-        ? Overwrite<TResult, {status: DataLoaderStatus}> & {originalStatus: TResult['status']}
+        ? Overwrite<
+              TResult,
+              {
+                  status: DataLoaderStatus;
+                  refetch: () => Promise<void>;
+              }
+          > & {originalStatus: TResult['status']}
         : never;

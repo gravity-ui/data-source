@@ -17,6 +17,7 @@ import type {
 import {useRefetchInterval} from '../../hooks/useRefetchInterval';
 import {normalizeStatus} from '../../utils/normalizeStatus';
 import {warnDisabledRefetch} from '../../utils/warnDisabledRefetch';
+import {wrapRefetch} from '../../utils/wrapRefetch';
 
 import type {AnyInfiniteQueryDataSource, InfiniteQueryObserverExtendedOptions} from './types';
 import {composeOptions} from './utils';
@@ -72,6 +73,6 @@ export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSou
         data: transformedData,
         originalStatus: state.status,
         originalData: state.data,
-        refetch: isDisabled ? warnDisabledRefetch : state.refetch,
+        refetch: isDisabled ? warnDisabledRefetch : wrapRefetch(state.refetch),
     } as DataSourceState<TDataSource>;
 };

@@ -13,6 +13,7 @@ import type {
 import {useRefetchInterval} from '../../hooks/useRefetchInterval';
 import {normalizeStatus} from '../../utils/normalizeStatus';
 import {warnDisabledRefetch} from '../../utils/warnDisabledRefetch';
+import {wrapRefetch} from '../../utils/wrapRefetch';
 
 import type {AnyPlainQueryDataSource, QueryObserverExtendedOptions} from './types';
 import {composeOptions} from './utils';
@@ -59,6 +60,6 @@ export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
         ...state,
         status: normalizeStatus(state.status, state.fetchStatus),
         originalStatus: state.status,
-        refetch: isDisabled ? warnDisabledRefetch : state.refetch,
+        refetch: isDisabled ? warnDisabledRefetch : wrapRefetch(state.refetch),
     } as DataSourceState<TDataSource>;
 };

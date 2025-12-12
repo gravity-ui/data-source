@@ -84,6 +84,7 @@ type ResultWrapper<TResult, TRequest, TResponse, TData, TError> =
               {
                   status: DataLoaderStatus;
                   data: Array<FlatArray<Array<ActualData<TData, TResponse>>, 1>>;
+                  refetch: () => Promise<void>;
               }
           > & {
               originalStatus: TResult['status'];
