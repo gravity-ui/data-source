@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/gravity-ui/data-source/compare/v0.8.1...v0.8.2) (2025-12-12)
+
+
+### Bug Fixes
+
+* revert "do not manual refetch disabled queries" ([#43](https://github.com/gravity-ui/data-source/issues/43)) ([ac29b67](https://github.com/gravity-ui/data-source/commit/ac29b67250a2749c584a5b74503e2c1b81f3977f))
+
 ## [0.8.1](https://github.com/gravity-ui/data-source/compare/v0.8.0...v0.8.1) (2025-12-08)
 
 
