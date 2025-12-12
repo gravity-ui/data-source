@@ -11,6 +11,11 @@ export interface QueryDataAdditionalOptions<
     TQueryKey extends QueryKey = QueryKey,
 > {
     refetchInterval?: RefetchInterval<TQueryFnData, TError, TQueryData, TQueryKey>;
+    /**
+     * @deprecated The use of the enabled option is deprecated.
+     * It is recommended to use idle as query parameters to control query state.
+     */
+    enabled?: boolean;
     /** Normalization configuration (enable/disable) */
     normalize?: boolean;
     /** Optimistic data update configuration */
