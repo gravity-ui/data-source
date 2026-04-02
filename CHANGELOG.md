@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.0](https://github.com/gravity-ui/data-source/compare/v0.8.2...v0.9.0) (2026-04-02)
+
+
+### Features
+
+* refetch return Promise&lt;Void&gt; ([#45](https://github.com/gravity-ui/data-source/issues/45)) ([70d7d92](https://github.com/gravity-ui/data-source/commit/70d7d921c5eee397d0db5b244f3985874c6f898d))
+* **withCatch:** avoid never[] widening union when success type is an array ([#49](https://github.com/gravity-ui/data-source/issues/49)) ([214168e](https://github.com/gravity-ui/data-source/commit/214168e718f69df90a89ae88f3a402479690ff27))
+
 ## [0.8.2](https://github.com/gravity-ui/data-source/compare/v0.8.1...v0.8.2) (2025-12-12)
 
 
