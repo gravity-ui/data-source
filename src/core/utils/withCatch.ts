@@ -26,8 +26,19 @@
 export function withCatch<TArgs extends unknown[], TFetchReturnType, TCatchReturnType>(
     fetchFn: (...args: TArgs) => Promise<TFetchReturnType>,
     onCatchFn: (reason: unknown) => TCatchReturnType,
-): (...args: TArgs) => Promise<TFetchReturnType | TCatchReturnType> {
+): (...args: TArgs) => Promise<WithCatchMergedReturn<TFetchReturnType, TCatchReturnType>> {
     return (...args) => {
-        return fetchFn(...args).catch(onCatchFn) as Promise<TFetchReturnType | TCatchReturnType>;
+        return fetchFn(...args).catch(onCatchFn) as Promise<
+            WithCatchMergedReturn<TFetchReturnType, TCatchReturnType>
+        >;
     };
 }
+
+/** If success is array-typed, an inferred `() => []` handler (`never[]`) is merged into the success type. */
+type WithCatchMergedReturn<TSuccess, TCatch> = [TCatch] extends [never]
+    ? TSuccess
+    : [TSuccess] extends [readonly unknown[]]
+      ? TCatch extends readonly never[]
+          ? TSuccess
+          : TSuccess | TCatch
+      : TSuccess | TCatch;
