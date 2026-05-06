@@ -12,6 +12,6 @@ jobs:
       - name: Release from ${{ github.ref_name }}
         uses: gravity-ui/release-action@v1
         with:
-          node-version: 18
+          node-version: 24
           github-token: ${{ secrets.GRAVITY_UI_BOT_GITHUB_TOKEN }}
           npm-token: ${{ secrets.GRAVITY_UI_BOT_NPM_TOKEN }}
