@@ -19,8 +19,8 @@
     "url": "https://github.com/gravity-ui/data-source/issues"
   },
   "engines": {
-    "node": ">= 18",
-    "npm": ">= 9",
+    "node": ">= 24",
+    "npm": ">= 11",
     "yarn": "Please use npm instead of yarn to install dependencies",
     "pnpm": "Please use npm instead of pnpm to install dependencies"
   },
