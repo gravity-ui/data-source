@@ -1,3 +1,5 @@
+export * from './components/QueryAsyncBoundary';
+
 export type {QueryDataSourceContext, AnyQueryDataSource} from './types/base';
 export type {RefetchIntervalFunction, RefetchInterval} from './types/refetch-interval';
 
