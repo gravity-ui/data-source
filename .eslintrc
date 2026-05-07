@@ -9,7 +9,7 @@
     "parserOptions": {
         "project": "tsconfig.json"
     },
-    "ignorePatterns": ["/*", "!/src"],
+    "ignorePatterns": ["/*", "!/src", "!/.storybook"],
     "rules": {
         "callback-return": "off",
         "react-hooks/exhaustive-deps": "error",
