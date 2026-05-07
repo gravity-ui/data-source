@@ -54,7 +54,7 @@ export type DataSourceContext<TDataSource> =
 
 export type DataSourceParams<TDataSource> =
     TDataSource extends DataSource<
-        infer _TContenxt,
+        infer _TContext,
         infer TParams,
         infer TRequest,
         infer _TResponse,
@@ -69,7 +69,7 @@ export type DataSourceParams<TDataSource> =
 
 export type DataSourceRequest<TDataSource> =
     TDataSource extends DataSource<
-        infer _TContenxt,
+        infer _TContext,
         infer _TParams,
         infer TRequest,
         infer _TResponse,
@@ -84,7 +84,7 @@ export type DataSourceRequest<TDataSource> =
 
 export type DataSourceResponse<TDataSource> =
     TDataSource extends DataSource<
-        infer _TContenxt,
+        infer _TContext,
         infer _TParams,
         infer _TRequest,
         infer TResponse,
@@ -99,7 +99,7 @@ export type DataSourceResponse<TDataSource> =
 
 export type DataSourceData<TDataSource> =
     TDataSource extends DataSource<
-        infer _TContenxt,
+        infer _TContext,
         infer _TParams,
         infer _TRequest,
         infer TResponse,
@@ -114,7 +114,7 @@ export type DataSourceData<TDataSource> =
 
 export type DataSourceError<TDataSource> =
     TDataSource extends DataSource<
-        infer _TContenxt,
+        infer _TContext,
         infer _TParams,
         infer _TRequest,
         infer _TResponse,
@@ -129,7 +129,7 @@ export type DataSourceError<TDataSource> =
 
 export type DataSourceOptions<TDataSource> =
     TDataSource extends DataSource<
-        infer _TContenxt,
+        infer _TContext,
         infer _TParams,
         infer _TRequest,
         infer _TResponse,
@@ -144,7 +144,7 @@ export type DataSourceOptions<TDataSource> =
 
 export type DataSourceState<TDataSource> =
     TDataSource extends DataSource<
-        infer _TContenxt,
+        infer _TContext,
         infer _TParams,
         infer _TRequest,
         infer _TResponse,
@@ -159,7 +159,7 @@ export type DataSourceState<TDataSource> =
 
 export type DataSourceFetchContext<TDataSource> =
     TDataSource extends DataSource<
-        infer _TContenxt,
+        infer _TContext,
         infer _TParams,
         infer _TRequest,
         infer _TResponse,
