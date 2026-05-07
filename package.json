@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@normy/core": "^0.14.0",
+    "react-error-boundary": "^6.1.1",
     "utility-types": "^3.11.0"
   },
   "devDependencies": {
