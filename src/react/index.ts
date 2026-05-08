@@ -1,6 +1,7 @@
 export * from './components/AsyncBoundary';
 export * from './components/DataLoader';
 export * from './components/DataInfiniteLoader';
+export * from './components/EmptyView';
 export type {ErrorAction, ErrorViewProps} from './components/types';
 
 export {DataManagerContext, useDataManager} from './DataManagerContext';
