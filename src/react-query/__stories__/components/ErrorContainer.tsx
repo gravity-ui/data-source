@@ -4,7 +4,7 @@ import {InternalError} from '@gravity-ui/illustrations';
 import type {PlaceholderContainerProps} from '@gravity-ui/uikit';
 import {Button, PlaceholderContainer, spacing} from '@gravity-ui/uikit';
 
-import type {ErrorViewProps} from '../../..';
+import type {ErrorViewProps} from '../../../react';
 import type {AppError} from '../types/error';
 
 export interface ErrorContainerProps

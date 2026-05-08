@@ -1,18 +1,21 @@
 import React from 'react';
 
-import {Button, Card, Flex, User} from '@gravity-ui/uikit';
+import {Button, Flex} from '@gravity-ui/uikit';
 
 import {useQueryData} from '../..';
 import {DataLoader} from '../components/DataLoader';
-import {UserRole} from '../components/UserRole';
+import {UsersList} from '../components/UsersList';
 import {usersDataSource} from '../data-sources/users';
+import type {MockUser} from '../mocks/users';
 
 import {UserDetailsPage} from './UserDetailsPage';
+
+const EMPTY_USERS: MockUser[] = [];
 
 export const UsersPage: React.FC = () => {
     const [selectedUserId, setSelectedUserId] = React.useState<number | null>(null);
 
-    const {data: users, status, error, refetch} = useQueryData(usersDataSource, {});
+    const {data: users = EMPTY_USERS, status, error, refetch} = useQueryData(usersDataSource, {});
 
     if (selectedUserId !== null) {
         return (
@@ -27,26 +30,7 @@ export const UsersPage: React.FC = () => {
 
     return (
         <DataLoader status={status} error={error} errorAction={refetch}>
-            <Flex direction="column" gap={2}>
-                {users?.map((user) => (
-                    <Card
-                        key={user.id}
-                        type="action"
-                        view="outlined"
-                        spacing={{py: 3, px: 4}}
-                        onClick={() => setSelectedUserId(user.id)}
-                    >
-                        <Flex alignItems="center" justifyContent="space-between">
-                            <User
-                                avatar={{theme: 'brand', text: user.name}}
-                                name={user.name}
-                                description={user.email}
-                            />
-                            <UserRole role={user.role} />
-                        </Flex>
-                    </Card>
-                ))}
-            </Flex>
+            <UsersList users={users} onSelect={setSelectedUserId} />
         </DataLoader>
     );
 };

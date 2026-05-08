@@ -8,6 +8,7 @@ export {useQueryData} from './hooks/useQueryData';
 export {useQueryResponses} from './hooks/useQueryResponses';
 export {useRefetchAll} from './hooks/useRefetchAll';
 export {useRefetchErrored} from './hooks/useRefetchErrored';
+export {useSuspenseQueryData} from './hooks/useSuspenseQueryData';
 
 export type {InfiniteQueryDataSource, AnyInfiniteQueryDataSource} from './impl/infinite/types';
 export {makeInfiniteQueryDataSource} from './impl/infinite/factory';
