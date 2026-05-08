@@ -1,7 +1,7 @@
 import React from 'react';
 
-import type {DataLoaderProps as DataLoaderPropsBase} from '../../..';
-import {DataLoader as DataLoaderBase} from '../../..';
+import type {DataLoaderProps as DataLoaderPropsBase} from '../../../react';
+import {DataLoader as DataLoaderBase} from '../../../react';
 import type {AppError} from '../types/error';
 
 import type {ErrorContainerProps} from './ErrorContainer';

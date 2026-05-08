@@ -8,7 +8,11 @@ export const withQueryAsyncBoundary = <TProps extends object, TError>(
     LoadingView: QueryAsyncBoundaryProps<TError>['LoadingView'],
     ErrorView: QueryAsyncBoundaryProps<TError>['ErrorView'],
 ) => {
-    const WrappedComponent: React.FC<TProps> = (props) => (
+    const WrappedComponent: React.FC<TProps> & {
+        Content: React.ComponentType<TProps>;
+        Loading: QueryAsyncBoundaryProps<TError>['LoadingView'];
+        Error: QueryAsyncBoundaryProps<TError>['ErrorView'];
+    } = (props) => (
         <QueryAsyncBoundary LoadingView={LoadingView} ErrorView={ErrorView}>
             <Component {...props} />
         </QueryAsyncBoundary>
@@ -17,6 +21,10 @@ export const withQueryAsyncBoundary = <TProps extends object, TError>(
     WrappedComponent.displayName = `WithQueryAsyncBoundary(${
         Component.displayName || Component.name
     })`;
+
+    WrappedComponent.Content = Component;
+    WrappedComponent.Loading = LoadingView;
+    WrappedComponent.Error = ErrorView;
 
     return WrappedComponent;
 };
