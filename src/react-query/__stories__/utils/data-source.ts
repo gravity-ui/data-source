@@ -3,7 +3,8 @@ import {
     makeInfiniteQueryDataSource as makeInfiniteQueryDataSourceBase,
     makePlainQueryDataSource as makePlainQueryDataSourceBase,
 } from '../..';
-import type {AppError} from '../types/error';
+
+import type {AppError} from './error';
 
 export const makePlainQueryDataSource = <TParams, TRequest, TResponse, TData, TError = AppError>(
     config: Omit<PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError>, 'type'>,
