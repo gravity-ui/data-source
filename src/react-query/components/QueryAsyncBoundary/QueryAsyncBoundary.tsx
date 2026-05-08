@@ -6,9 +6,7 @@ import {AsyncBoundary} from '../../../react';
 
 import type {QueryAsyncBoundaryProps} from './types';
 
-export const QueryAsyncBoundary = <TError,>(
-    props: QueryAsyncBoundaryProps<TError>,
-): React.ReactNode => (
+export const QueryAsyncBoundary: React.FC<QueryAsyncBoundaryProps> = (props) => (
     <QueryErrorResetBoundary>
         {({reset}) => <AsyncBoundary onReset={reset} {...props} />}
     </QueryErrorResetBoundary>

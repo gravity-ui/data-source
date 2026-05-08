@@ -5,7 +5,7 @@ export interface ErrorAction {
     children?: ReactNode;
 }
 
-export interface ErrorViewProps<TError> {
+export interface ErrorViewProps<TError = unknown> {
     error: TError | null;
     action?: ErrorAction;
 }

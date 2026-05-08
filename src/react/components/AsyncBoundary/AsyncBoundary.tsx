@@ -5,15 +5,15 @@ import {ErrorBoundary} from 'react-error-boundary';
 
 import type {AsyncBoundaryProps} from './types';
 
-export const AsyncBoundary = <TError,>({
+export const AsyncBoundary: React.FC<AsyncBoundaryProps> = ({
     LoadingView,
     ErrorView,
     onReset,
     children,
-}: AsyncBoundaryProps<TError>): React.ReactNode => {
+}) => {
     const fallbackRender = React.useCallback(
         ({error, resetErrorBoundary}: FallbackProps) => (
-            <ErrorView error={error as TError | null} action={{handler: resetErrorBoundary}} />
+            <ErrorView error={error} action={{handler: resetErrorBoundary}} />
         ),
         [ErrorView],
     );
