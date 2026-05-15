@@ -24,9 +24,6 @@
     "yarn": "Please use npm instead of yarn to install dependencies",
     "pnpm": "Please use npm instead of pnpm to install dependencies"
   },
-  "main": "build/cjs/index.js",
-  "module": "build/esm/index.js",
-  "types": "build/esm/index.d.ts",
   "exports": {
     ".": {
       "types": "./build/esm/index.d.ts",
