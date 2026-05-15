@@ -8,3 +8,9 @@ export interface AsyncBoundaryProps {
     onReset?: () => void;
     children: ReactNode;
 }
+
+export interface AsyncBoundaryComponent<TProps extends object> extends React.FC<TProps> {
+    Content: React.ComponentType<TProps>;
+    Loading: AsyncBoundaryProps['LoadingView'];
+    Error: AsyncBoundaryProps['ErrorView'];
+}

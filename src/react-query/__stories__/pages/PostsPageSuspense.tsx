@@ -2,7 +2,8 @@ import React from 'react';
 
 import {Flex, Skeleton} from '@gravity-ui/uikit';
 
-import {useSuspenseQueryData, withQueryAsyncBoundary} from '../..';
+import {useSuspenseQueryData, withQueryAsyncBoundary} from '@gravity-ui/data-source';
+
 import {ErrorContainer} from '../components/ErrorContainer';
 import {PostsList} from '../components/PostsList';
 import {postsDataSource} from '../data-sources/posts';

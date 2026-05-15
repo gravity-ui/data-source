@@ -2,7 +2,8 @@ import React from 'react';
 
 import {Button, Flex} from '@gravity-ui/uikit';
 
-import {useSuspenseQueryData, withQueryAsyncBoundary} from '../..';
+import {useSuspenseQueryData, withQueryAsyncBoundary} from '@gravity-ui/data-source';
+
 import {ErrorContainer} from '../components/ErrorContainer';
 import {LoaderContainer} from '../components/LoaderContainer';
 import {UsersList} from '../components/UsersList';

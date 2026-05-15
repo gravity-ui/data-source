@@ -27,12 +27,47 @@
   "main": "build/cjs/index.js",
   "module": "build/esm/index.js",
   "types": "build/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./build/esm/index.d.ts",
+      "import": "./build/esm/index.js",
+      "require": "./build/cjs/index.js"
+    },
+    "./plugin": {
+      "types": "./build/plugin/index.d.mts",
+      "default": "./build/plugin/index.mjs"
+    },
+    "./plugin-webpack": {
+      "types": "./build/plugin/webpack.d.mts",
+      "default": "./build/plugin/webpack.mjs"
+    },
+    "./plugin-rspack": {
+      "types": "./build/plugin/rspack.d.mts",
+      "default": "./build/plugin/rspack.mjs"
+    },
+    "./plugin-vite": {
+      "types": "./build/plugin/vite.d.mts",
+      "default": "./build/plugin/vite.mjs"
+    },
+    "./plugin-rollup": {
+      "types": "./build/plugin/rollup.d.mts",
+      "default": "./build/plugin/rollup.mjs"
+    },
+    "./plugin-esbuild": {
+      "types": "./build/plugin/esbuild.d.mts",
+      "default": "./build/plugin/esbuild.mjs"
+    },
+    "./plugin-client": {
+      "types": "./build/plugin/typings/client.d.ts"
+    }
+  },
   "files": [
     "build"
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "NODE_ENV=production app-builder build",
+    "build": "NODE_ENV=production app-builder build && npm run build:plugin",
+    "build:plugin": "tsdown",
     "clean": "rm -rf build",
     "deps:ci": "npm ci",
     "lint": "eslint .",
@@ -46,7 +81,11 @@
   },
   "dependencies": {
     "@normy/core": "^0.14.0",
+    "magic-string": "^0.30.21",
+    "oxc-parser": "^0.130.0",
+    "oxc-transform": "^0.130.0",
     "react-error-boundary": "^6.1.1",
+    "unplugin": "^3.0.0",
     "utility-types": "^3.11.0"
   },
   "devDependencies": {
@@ -74,7 +113,8 @@
     "nano-staged": "^0.8.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "storybook": "^9.1.20"
+    "storybook": "^9.1.20",
+    "tsdown": "^0.22.0"
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5.0.0",

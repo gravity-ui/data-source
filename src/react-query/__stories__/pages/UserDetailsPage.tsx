@@ -1,6 +1,7 @@
 import React from 'react';
 
-import {useQueryData} from '../../index';
+import {useQueryData} from '@gravity-ui/data-source';
+
 import {DataLoader} from '../components/DataLoader';
 import {UserDetails} from '../components/UserDetails';
 import {userDataSource} from '../data-sources/users';

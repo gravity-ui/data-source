@@ -1,7 +1,7 @@
 import React from 'react';
 
-import type {DataLoaderProps as DataLoaderPropsBase} from '../../../react';
-import {DataLoader as DataLoaderBase} from '../../../react';
+import type {DataLoaderProps as DataLoaderPropsBase} from '@gravity-ui/data-source';
+import {DataLoader as DataLoaderBase} from '@gravity-ui/data-source';
 
 import type {ErrorContainerProps} from './ErrorContainer';
 import {ErrorContainer} from './ErrorContainer';

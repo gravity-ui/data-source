@@ -2,7 +2,8 @@ import React from 'react';
 
 import {Button, Flex} from '@gravity-ui/uikit';
 
-import {useQueryData} from '../..';
+import {useQueryData} from '@gravity-ui/data-source';
+
 import {DataLoader} from '../components/DataLoader';
 import {UsersList} from '../components/UsersList';
 import {usersDataSource} from '../data-sources/users';
