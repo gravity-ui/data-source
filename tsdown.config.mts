@@ -6,6 +6,7 @@ import {defineConfig} from 'tsdown';
 export default defineConfig({
     entry: ['src/plugin/*.ts'],
     outDir: 'build/plugin',
+    format: ['esm', 'cjs'],
     dts: true,
     deps: {
         skipNodeModulesBundle: true,
