@@ -1,8 +1,8 @@
-import type {InfiniteQueryDataSource, PlainQueryDataSource} from '../..';
+import type {InfiniteQueryDataSource, PlainQueryDataSource} from '@gravity-ui/data-source';
 import {
     makeInfiniteQueryDataSource as makeInfiniteQueryDataSourceBase,
     makePlainQueryDataSource as makePlainQueryDataSourceBase,
-} from '../..';
+} from '@gravity-ui/data-source';
 
 import type {AppError} from './error';
 

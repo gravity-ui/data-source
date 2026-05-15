@@ -1,4 +1,5 @@
-import {skipContext} from '../../../core';
+import {skipContext} from '@gravity-ui/data-source';
+
 import {MOCK_POSTS} from '../mocks/posts';
 import {makePlainQueryDataSource} from '../utils/data-source';
 import {AppError} from '../utils/error';

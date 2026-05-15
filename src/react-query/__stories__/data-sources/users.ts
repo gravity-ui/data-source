@@ -1,4 +1,5 @@
-import {skipContext} from '../../../core';
+import {skipContext} from '@gravity-ui/data-source';
+
 import {MOCK_USERS} from '../mocks/users';
 import {makePlainQueryDataSource} from '../utils/data-source';
 import {sleep} from '../utils/sleep';
