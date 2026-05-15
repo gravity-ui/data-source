@@ -5,5 +5,5 @@ module.exports = {
         '^.+\\.tsx?$': '@swc/jest',
     },
     testEnvironment: 'jsdom',
-    setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+    setupFilesAfterEnv: ['<rootDir>/src/__tests__/setupTests.ts'],
 };
