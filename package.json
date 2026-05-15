@@ -82,8 +82,8 @@
   "dependencies": {
     "@normy/core": "^0.14.0",
     "magic-string": "^0.30.21",
-    "oxc-parser": "^0.130.0",
-    "oxc-transform": "^0.130.0",
+    "oxc-parser": "^0.128.0",
+    "oxc-transform": "^0.128.0",
     "react-error-boundary": "^6.1.1",
     "unplugin": "^3.0.0",
     "utility-types": "^3.11.0"
