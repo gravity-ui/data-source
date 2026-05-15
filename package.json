@@ -35,27 +35,33 @@
     },
     "./plugin": {
       "types": "./build/plugin/index.d.mts",
-      "default": "./build/plugin/index.mjs"
+      "import": "./build/plugin/index.mjs",
+      "require": "./build/plugin/index.cjs"
     },
     "./plugin-webpack": {
       "types": "./build/plugin/webpack.d.mts",
-      "default": "./build/plugin/webpack.mjs"
+      "import": "./build/plugin/webpack.mjs",
+      "require": "./build/plugin/webpack.cjs"
     },
     "./plugin-rspack": {
       "types": "./build/plugin/rspack.d.mts",
-      "default": "./build/plugin/rspack.mjs"
+      "import": "./build/plugin/rspack.mjs",
+      "require": "./build/plugin/rspack.cjs"
     },
     "./plugin-vite": {
       "types": "./build/plugin/vite.d.mts",
-      "default": "./build/plugin/vite.mjs"
+      "import": "./build/plugin/vite.mjs",
+      "require": "./build/plugin/vite.cjs"
     },
     "./plugin-rollup": {
       "types": "./build/plugin/rollup.d.mts",
-      "default": "./build/plugin/rollup.mjs"
+      "import": "./build/plugin/rollup.mjs",
+      "require": "./build/plugin/rollup.cjs"
     },
     "./plugin-esbuild": {
       "types": "./build/plugin/esbuild.d.mts",
-      "default": "./build/plugin/esbuild.mjs"
+      "import": "./build/plugin/esbuild.mjs",
+      "require": "./build/plugin/esbuild.cjs"
     },
     "./plugin-client": {
       "types": "./build/plugin/typings/client.d.ts"
