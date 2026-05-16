@@ -33,26 +33,32 @@ export function transformDefinitionModule(s: MagicString, filename: string, info
     }
 }
 
-export function transformUsages(s: MagicString, usages: CompanionUsageInfo[]): void {
+export interface VerifiedCompanionUsage {
+    usage: CompanionUsageInfo;
+    hocImportSource: string;
+    hocExportedName: string;
+}
+
+export function transformUsages(s: MagicString, usages: VerifiedCompanionUsage[]): void {
     // 1. Replace X.Prop → XProp
-    for (const {spec, accesses} of usages) {
-        for (const access of accesses) {
-            s.overwrite(access.start, access.end, `${spec.localName}${access.prop}`);
+    for (const {usage} of usages) {
+        for (const access of usage.accesses) {
+            s.overwrite(access.start, access.end, `${usage.spec.localName}${access.prop}`);
         }
     }
 
     // 2. Prepend companion imports
     const newImports: string[] = [];
 
-    for (const {decl, spec, accesses} of usages) {
-        const propsUsed = new Set(accesses.map((access) => access.prop));
+    for (const {usage, hocImportSource, hocExportedName} of usages) {
+        const propsUsed = new Set(usage.accesses.map((access) => access.prop));
 
         for (const prop of propsUsed) {
             newImports.push(
                 renderNamedImport(
-                    `${spec.localName}${prop}`,
-                    `${spec.importedName}${prop}`,
-                    makeCompanionId(COMPANION_TYPE_BY_SUFFIX[prop], decl.source),
+                    `${usage.spec.localName}${prop}`,
+                    `${hocExportedName}${prop}`,
+                    makeCompanionId(COMPANION_TYPE_BY_SUFFIX[prop], hocImportSource),
                 ),
             );
         }
@@ -65,7 +71,7 @@ export function transformUsages(s: MagicString, usages: CompanionUsageInfo[]): v
     // 3. Remove specifiers of original imports that are no longer used
     const localsByDecl = new Map<ImportDeclarationMeta, Set<string>>();
 
-    for (const usage of usages) {
+    for (const {usage} of usages) {
         if (usage.hasOtherUsages) {
             continue;
         }
