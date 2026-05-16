@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import MagicString from 'magic-string';
 import type {UnpluginFactory} from 'unplugin';
 
-import type {CompanionUsageInfo, HocInfo} from './extract';
+import type {ArgInfo, CompanionAccess, CompanionUsageInfo, HocInfo} from './extract';
 import {extractHocInfo, extractUsages} from './extract';
 import type {GenerateOptions} from './generate';
 import {generateAuxModule, generateLazyModule} from './generate';
@@ -164,9 +164,11 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
                     return null;
                 }
 
+                const filteredUsages = info ? dropAccessesInsideHocArgs(info, usages) : usages;
+
                 const verifiedUsages = (
                     await Promise.all(
-                        usages.map(async (usage) => {
+                        filteredUsages.map(async (usage) => {
                             const resolvedSourceFile = await resolveSourceFile(
                                 this,
                                 usage.decl.source,
@@ -214,3 +216,44 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
         },
     };
 };
+
+function isInside(info: ArgInfo, access: CompanionAccess): boolean {
+    return info.argStart <= access.start && access.end <= info.argEnd;
+}
+
+// transformDefinitionModule overwrites HOC arg ranges wholesale (the entire arg becomes
+// `${name}Loading`/`Error`/`Content`). A second overwrite of a companion access inside
+// such a range would crash MagicString with "Cannot split a chunk that has already been
+// edited". Drop those accesses here.
+//
+// hasOtherUsages stays correct without recomputation: each dropped access contributed
+// exactly one entry to totalStarts (via the object Identifier visited as a child of the
+// MemberExpression), so totalStarts.size - accesses.length is preserved.
+function dropAccessesInsideHocArgs(
+    info: HocInfo,
+    usages: CompanionUsageInfo[],
+): CompanionUsageInfo[] {
+    const result: CompanionUsageInfo[] = [];
+
+    for (const usage of usages) {
+        const accesses = usage.accesses.filter(
+            (access) =>
+                !isInside(info.loading, access) &&
+                !isInside(info.error, access) &&
+                !(info.content.kind === 'inline' && isInside(info.content, access)),
+        );
+
+        if (accesses.length === 0) {
+            continue;
+        }
+
+        if (accesses.length === usage.accesses.length) {
+            result.push(usage);
+            continue;
+        }
+
+        result.push({...usage, accesses});
+    }
+
+    return result;
+}
