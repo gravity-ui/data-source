@@ -11,6 +11,6 @@ export interface AsyncBoundaryProps {
 
 export interface AsyncBoundaryComponent<TProps extends object> extends React.FC<TProps> {
     Content: React.ComponentType<TProps>;
-    Loading: AsyncBoundaryProps['LoadingView'];
-    Error: AsyncBoundaryProps['ErrorView'];
+    Loading: ComponentType<TProps>;
+    Error: ComponentType<TProps & ErrorViewProps>;
 }

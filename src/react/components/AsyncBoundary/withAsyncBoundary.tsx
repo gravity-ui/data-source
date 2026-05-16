@@ -1,15 +1,20 @@
 import React from 'react';
 
+import type {ErrorViewProps} from '../types';
+
 import {AsyncBoundary} from './AsyncBoundary';
-import type {AsyncBoundaryComponent, AsyncBoundaryProps} from './types';
+import type {AsyncBoundaryComponent} from './types';
 
 export const withAsyncBoundary = <TProps extends object>(
     Component: React.ComponentType<TProps>,
-    LoadingView: AsyncBoundaryProps['LoadingView'],
-    ErrorView: AsyncBoundaryProps['ErrorView'],
+    LoadingView: React.ComponentType<TProps>,
+    ErrorView: React.ComponentType<TProps & ErrorViewProps>,
 ) => {
     const WrappedComponent = ((props: TProps) => (
-        <AsyncBoundary LoadingView={LoadingView} ErrorView={ErrorView}>
+        <AsyncBoundary
+            LoadingView={() => <LoadingView {...props} />}
+            ErrorView={(errorProps) => <ErrorView {...props} {...errorProps} />}
+        >
             <Component {...props} />
         </AsyncBoundary>
     )) as AsyncBoundaryComponent<TProps>;
