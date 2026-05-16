@@ -3,6 +3,8 @@ import React from 'react';
 import type {FallbackProps} from 'react-error-boundary';
 import {ErrorBoundary} from 'react-error-boundary';
 
+import {Async} from '../Async';
+
 import type {AsyncBoundaryProps} from './types';
 
 export const AsyncBoundary: React.FC<AsyncBoundaryProps> = ({
@@ -20,7 +22,7 @@ export const AsyncBoundary: React.FC<AsyncBoundaryProps> = ({
 
     return (
         <ErrorBoundary fallbackRender={fallbackRender} onReset={onReset}>
-            <React.Suspense fallback={<LoadingView />}>{children}</React.Suspense>
+            <Async LoadingView={LoadingView}>{children}</Async>
         </ErrorBoundary>
     );
 };
