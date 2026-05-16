@@ -9,8 +9,12 @@ export interface AsyncBoundaryProps {
     children: ReactNode;
 }
 
-export interface AsyncBoundaryComponent<TProps extends object> extends React.FC<TProps> {
+export interface AsyncBoundaryComponent<
+    TProps extends object = {},
+    TLoadingProps extends object = {},
+    TErrorProps extends object = {},
+> extends React.FC<TProps & TLoadingProps & Omit<TErrorProps, keyof ErrorViewProps>> {
     Content: React.ComponentType<TProps>;
-    Loading: AsyncBoundaryProps['LoadingView'];
-    Error: AsyncBoundaryProps['ErrorView'];
+    Loading: ComponentType<TLoadingProps & Partial<TProps>>;
+    Error: ComponentType<ErrorViewProps & TErrorProps & Partial<TProps>>;
 }
