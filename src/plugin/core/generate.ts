@@ -18,17 +18,14 @@ export interface SourceWithMap {
     map: string;
 }
 
-export function generateAuxModule(
-    sourceFile: string,
+export function assembleAuxModuleSource(
     exportedName: string,
     info: AuxInfo,
     type: 'loading' | 'error',
-    options: GenerateOptions = {},
-): SourceWithMap {
+): string {
     const suffix = COMPANION_TYPES[type];
-    const cleanSourceFile = stripQuery(sourceFile);
 
-    const code = [
+    return [
         renderImports(info.imports),
         '',
         `export const ${exportedName}${suffix} = ${info.argSource};`,
@@ -36,8 +33,26 @@ export function generateAuxModule(
     ]
         .join('\n')
         .trimStart();
+}
 
-    return transformJsx(makeCompanionId(type, cleanSourceFile), code, options);
+export function compileAuxJsx(
+    filename: string,
+    code: string,
+    options: GenerateOptions = {},
+): SourceWithMap {
+    const result = transformSync(filename, code, {
+        lang: 'tsx',
+        jsx: options.jsx,
+        target: options.target,
+        sourcemap: true,
+    });
+
+    if (result.errors.length > 0) {
+        const error = result.errors[0];
+        throw new Error(error.codeframe ?? error.message);
+    }
+
+    return {code: result.code, map: JSON.stringify(result.map)};
 }
 
 export function generateLazyModule(
@@ -87,22 +102,6 @@ export function generateLazyModule(
     });
 
     return {code, map: map.toString()};
-}
-
-function transformJsx(filename: string, code: string, options: GenerateOptions): SourceWithMap {
-    const result = transformSync(filename, code, {
-        lang: 'tsx',
-        jsx: options.jsx,
-        target: options.target,
-        sourcemap: true,
-    });
-
-    if (result.errors.length > 0) {
-        const error = result.errors[0];
-        throw new Error(error.codeframe ?? error.message);
-    }
-
-    return {code: result.code, map: JSON.stringify(result.map)};
 }
 
 function renderImport(decl: ImportDeclaration): string {
