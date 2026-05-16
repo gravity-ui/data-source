@@ -1,3 +1,4 @@
+export * from './components/Async';
 export * from './components/AsyncBoundary';
 export * from './components/DataLoader';
 export * from './components/DataInfiniteLoader';
