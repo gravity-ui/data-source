@@ -1,18 +1,27 @@
 import React from 'react';
 
-import {QueryAsyncBoundary} from './QueryAsyncBoundary';
-import type {QueryAsyncBoundaryComponent, QueryAsyncBoundaryProps} from './types';
+import type {ErrorViewProps} from '../../../react';
 
-export const withQueryAsyncBoundary = <TProps extends object>(
+import {QueryAsyncBoundary} from './QueryAsyncBoundary';
+import type {QueryAsyncBoundaryComponent} from './types';
+
+export const withQueryAsyncBoundary = <
+    TProps extends object = {},
+    TLoadingProps extends object = {},
+    TErrorProps extends object = {},
+>(
     Component: React.ComponentType<TProps>,
-    LoadingView: QueryAsyncBoundaryProps['LoadingView'],
-    ErrorView: QueryAsyncBoundaryProps['ErrorView'],
+    LoadingView: React.ComponentType<TLoadingProps & Partial<TProps>>,
+    ErrorView: React.ComponentType<ErrorViewProps & TErrorProps & Partial<TProps>>,
 ) => {
-    const WrappedComponent = ((props: TProps) => (
-        <QueryAsyncBoundary LoadingView={LoadingView} ErrorView={ErrorView}>
+    const WrappedComponent = ((props: TProps & TLoadingProps & TErrorProps) => (
+        <QueryAsyncBoundary
+            LoadingView={() => <LoadingView {...props} />}
+            ErrorView={(errorProps) => <ErrorView {...props} {...errorProps} />}
+        >
             <Component {...props} />
         </QueryAsyncBoundary>
-    )) as QueryAsyncBoundaryComponent<TProps>;
+    )) as QueryAsyncBoundaryComponent<TProps, TLoadingProps, TErrorProps>;
 
     WrappedComponent.displayName = `WithQueryAsyncBoundary(${
         Component.displayName || Component.name
