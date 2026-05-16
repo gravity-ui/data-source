@@ -10,19 +10,28 @@ export function transformDefinitionModule(s: MagicString, filename: string, info
     const cleanFilename = stripQuery(filename);
     const localSource = `./${path.basename(cleanFilename, path.extname(cleanFilename))}`;
 
-    s.prepend(
-        `${renderNamedImport(
+    const prependImports = [
+        renderNamedImport(
             `${name}Loading`,
             `${name}Loading`,
             makeCompanionId('loading', localSource),
-        )}\n${renderNamedImport(
-            `${name}Error`,
-            `${name}Error`,
-            makeCompanionId('error', localSource),
-        )}\n`,
-    );
+        ),
+    ];
+    if (info.error) {
+        prependImports.push(
+            renderNamedImport(
+                `${name}Error`,
+                `${name}Error`,
+                makeCompanionId('error', localSource),
+            ),
+        );
+    }
+    s.prepend(prependImports.join('\n') + '\n');
+
     s.overwrite(info.loading.argStart, info.loading.argEnd, `${name}Loading`);
-    s.overwrite(info.error.argStart, info.error.argEnd, `${name}Error`);
+    if (info.error) {
+        s.overwrite(info.error.argStart, info.error.argEnd, `${name}Error`);
+    }
 
     if (info.content.kind === 'identifier') {
         s.append(`\nexport {${info.content.name} as ${name}Content};\n`);

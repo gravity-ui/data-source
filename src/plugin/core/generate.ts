@@ -5,7 +5,7 @@ import type {ImportDeclaration} from 'oxc-parser';
 import type {JsxOptions} from 'oxc-transform';
 import {transformSync} from 'oxc-transform';
 
-import type {HocInfo} from './extract';
+import type {AuxInfo, HocInfo} from './extract';
 import {COMPANION_TYPES, makeCompanionId, stripQuery} from './utils';
 
 export interface GenerateOptions {
@@ -20,19 +20,18 @@ export interface SourceWithMap {
 
 export function generateAuxModule(
     sourceFile: string,
-    info: HocInfo,
+    exportedName: string,
+    info: AuxInfo,
     type: 'loading' | 'error',
     options: GenerateOptions = {},
 ): SourceWithMap {
-    const auxInfo = info[type];
-    const name = info.exportedName;
     const suffix = COMPANION_TYPES[type];
     const cleanSourceFile = stripQuery(sourceFile);
 
     const code = [
-        renderImports(auxInfo.imports),
+        renderImports(info.imports),
         '',
-        `export const ${name}${suffix} = ${auxInfo.argSource};`,
+        `export const ${exportedName}${suffix} = ${info.argSource};`,
         '',
     ]
         .join('\n')
@@ -52,7 +51,10 @@ export function generateLazyModule(
     const cleanSourceFile = stripQuery(sourceFile);
     const base = `./${path.basename(cleanSourceFile, path.extname(cleanSourceFile))}`;
 
-    const code = [
+    const hocBinding =
+        info.hocImportedName === 'default' ? info.hocLocalName : info.hocImportedName;
+
+    const lines = [
         `import {lazy} from '${importSource}';`,
         '',
         info.hocImportedName === 'default'
@@ -60,15 +62,22 @@ export function generateLazyModule(
             : `import {${info.hocImportedName}} from '${info.hocImportSource}';`,
         '',
         `import {${name}Loading} from '${base}.Loading';`,
-        `import {${name}Error} from '${base}.Error';`,
-        ``,
-        `export const ${name}Lazy = ${info.hocImportedName === 'default' ? info.hocLocalName : info.hocImportedName}(`,
+    ];
+    if (info.error) {
+        lines.push(`import {${name}Error} from '${base}.Error';`);
+    }
+    lines.push(
+        '',
+        `export const ${name}Lazy = ${hocBinding}(`,
         `    lazy(() => import('${base}').then((m) => ({default: m.${name}Content}))),`,
         `    ${name}Loading,`,
-        `    ${name}Error,`,
-        `);`,
-        ``,
-    ].join('\n');
+    );
+    if (info.error) {
+        lines.push(`    ${name}Error,`);
+    }
+    lines.push(`);`, ``);
+
+    const code = lines.join('\n');
 
     const filename = makeCompanionId('lazy', cleanSourceFile);
     const map = new MagicString(code).generateMap({
