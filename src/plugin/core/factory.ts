@@ -35,6 +35,7 @@ export interface DataSourceLazyPluginOptions {
 }
 
 export const DEFAULT_HOCS: DataSourceLazyPluginOptions['hocs'] = [
+    {from: '@gravity-ui/data-source', name: 'withAsync'},
     {from: '@gravity-ui/data-source', name: 'withAsyncBoundary'},
     {from: '@gravity-ui/data-source', name: 'withQueryAsyncBoundary'},
 ];
@@ -148,24 +149,25 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
                     return null;
                 }
 
-                switch (parsedId.type) {
-                    case 'loading':
-                    case 'error':
-                        return generateAuxModule(
-                            parsedId.sourceFile,
-                            info,
-                            parsedId.type,
-                            options.generateOptions,
-                        );
-                    case 'lazy':
-                        return generateLazyModule(
-                            parsedId.sourceFile,
-                            info,
-                            options.generateOptions,
-                        );
-                    default:
-                        return assertNever(parsedId.type);
+                if (parsedId.type === 'loading' || parsedId.type === 'error') {
+                    const auxInfo = info[parsedId.type];
+                    if (!auxInfo) {
+                        return null;
+                    }
+                    return generateAuxModule(
+                        parsedId.sourceFile,
+                        info.exportedName,
+                        auxInfo,
+                        parsedId.type,
+                        options.generateOptions,
+                    );
                 }
+
+                if (parsedId.type === 'lazy') {
+                    return generateLazyModule(parsedId.sourceFile, info, options.generateOptions);
+                }
+
+                return assertNever(parsedId.type);
             },
         },
 
@@ -313,7 +315,7 @@ function dropAccessesInsideHocArgs(
         const accesses = usage.accesses.filter(
             (access) =>
                 !isInside(info.loading, access) &&
-                !isInside(info.error, access) &&
+                !(info.error && isInside(info.error, access)) &&
                 !(info.content.kind === 'inline' && isInside(info.content, access)),
         );
 

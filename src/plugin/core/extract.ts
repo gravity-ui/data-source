@@ -24,7 +24,7 @@ export interface HocInfo {
     hocExportStart: number;
     content: ContentInfo;
     loading: AuxInfo;
-    error: AuxInfo;
+    error: AuxInfo | null;
 }
 
 // eslint-disable-next-line complexity
@@ -90,7 +90,7 @@ export function extractHocInfo(
                 !decl.init ||
                 decl.init.type !== 'CallExpression' ||
                 decl.init.callee.type !== 'Identifier' ||
-                decl.init.arguments.length !== 3
+                decl.init.arguments.length < 2
             ) {
                 continue;
             }
@@ -125,12 +125,14 @@ export function extractHocInfo(
                     argEnd: loadingArg.end,
                     imports: filterNeededImports(importDecls, collectIdentifiers(loadingArg)),
                 },
-                error: {
-                    argSource: source.slice(errorArg.start, errorArg.end),
-                    argStart: errorArg.start,
-                    argEnd: errorArg.end,
-                    imports: filterNeededImports(importDecls, collectIdentifiers(errorArg)),
-                },
+                error: errorArg
+                    ? {
+                          argSource: source.slice(errorArg.start, errorArg.end),
+                          argStart: errorArg.start,
+                          argEnd: errorArg.end,
+                          imports: filterNeededImports(importDecls, collectIdentifiers(errorArg)),
+                      }
+                    : null,
             };
         }
     }
