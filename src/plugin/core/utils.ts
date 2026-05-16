@@ -83,6 +83,22 @@ export function isRelativeId(id: string): boolean {
     return id[0] === '.';
 }
 
+export function toRelativeImportSource(fromFile: string, toFile: string): string {
+    const fromDir = path.dirname(stripQuery(fromFile));
+    let rel = path.relative(fromDir, toFile);
+
+    if (path.sep !== '/') {
+        rel = rel.split(path.sep).join('/');
+    }
+
+    if (!rel.startsWith('.')) {
+        rel = `./${rel}`;
+    }
+
+    const ext = path.extname(rel);
+    return ext ? rel.slice(0, -ext.length) : rel;
+}
+
 export function stripQuery(id: string): string {
     const queryIndex = id.indexOf('?');
     return queryIndex === -1 ? id : id.slice(0, queryIndex);

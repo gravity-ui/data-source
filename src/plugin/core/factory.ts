@@ -3,11 +3,12 @@ import fs from 'node:fs';
 import MagicString from 'magic-string';
 import type {UnpluginFactory} from 'unplugin';
 
-import type {ArgInfo, CompanionAccess, CompanionUsageInfo, HocInfo} from './extract';
-import {extractHocInfo, extractUsages} from './extract';
+import type {ArgInfo, CompanionAccess, CompanionUsageInfo, HocInfo, ReExports} from './extract';
+import {extractHocInfo, extractReExports, extractUsages} from './extract';
 import type {GenerateOptions} from './generate';
 import {generateAuxModule, generateLazyModule} from './generate';
 import {resolveSourceFile} from './resolve';
+import type {VerifiedCompanionUsage} from './transform';
 import {transformDefinitionModule, transformUsages} from './transform';
 import {
     VIRTUAL_PREFIX,
@@ -18,6 +19,7 @@ import {
     parseCompanionId,
     parseVirtualId,
     stripQuery,
+    toRelativeImportSource,
 } from './utils';
 
 export interface DataSourceLazyHocPattern {
@@ -62,6 +64,7 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
     );
 
     const hocInfoCache = new Map<string, HocInfo | null>();
+    const reExportsCache = new Map<string, ReExports>();
 
     const getHocInfo = (sourceFile: string, source?: string): HocInfo | null => {
         const key = stripQuery(sourceFile);
@@ -80,6 +83,21 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
         return info;
     };
 
+    const getReExports = (sourceFile: string, source?: string): ReExports => {
+        const key = stripQuery(sourceFile);
+
+        const cachedReExports = reExportsCache.get(key);
+        if (cachedReExports) {
+            return cachedReExports;
+        }
+
+        const resolvedSource = source ?? fs.readFileSync(key, 'utf-8');
+        const reExports = extractReExports(key, resolvedSource);
+
+        reExportsCache.set(key, reExports);
+        return reExports;
+    };
+
     return {
         name: 'data-source-lazy',
         enforce: 'pre',
@@ -95,7 +113,6 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
 
             if (companion) {
                 const resolvedId = await resolveSourceFile(this, id, normalizedImporter);
-
                 if (resolvedId) {
                     return null;
                 }
@@ -166,6 +183,53 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
 
                 const filteredUsages = info ? dropAccessesInsideHocArgs(info, usages) : usages;
 
+                const resolveHocSourceFile = async (
+                    file: string,
+                    importedName: string,
+                    visited: Set<string> = new Set(),
+                ): Promise<{file: string; info: HocInfo} | null> => {
+                    const visitKey = `${file}\0${importedName}`;
+                    if (visited.has(visitKey)) {
+                        return null;
+                    }
+                    visited.add(visitKey);
+
+                    const directInfo = getHocInfo(file);
+                    if (directInfo && directInfo.exportedName === importedName) {
+                        return {file, info: directInfo};
+                    }
+
+                    const reExports = getReExports(file);
+
+                    const named = reExports.named.get(importedName);
+                    if (named) {
+                        const resolved = await resolveSourceFile(this, named.source, file);
+                        if (resolved) {
+                            const next = await resolveHocSourceFile(
+                                resolved,
+                                named.importedName,
+                                visited,
+                            );
+                            if (next) {
+                                return next;
+                            }
+                        }
+                    }
+
+                    for (const starSource of reExports.stars) {
+                        const resolved = await resolveSourceFile(this, starSource, file);
+                        if (!resolved) {
+                            continue;
+                        }
+                        const next = await resolveHocSourceFile(resolved, importedName, visited);
+                        if (next) {
+                            return next;
+                        }
+                    }
+
+                    return null;
+                };
+
                 const verifiedUsages = (
                     await Promise.all(
                         filteredUsages.map(async (usage) => {
@@ -178,15 +242,22 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
                                 return null;
                             }
 
-                            const usageInfo = getHocInfo(resolvedSourceFile);
-                            if (!usageInfo || usageInfo.exportedName !== usage.spec.importedName) {
+                            const target = await resolveHocSourceFile(
+                                resolvedSourceFile,
+                                usage.spec.importedName,
+                            );
+                            if (!target) {
                                 return null;
                             }
 
-                            return usage;
+                            return {
+                                usage,
+                                hocImportSource: toRelativeImportSource(id, target.file),
+                                hocExportedName: target.info.exportedName,
+                            };
                         }),
                     )
-                ).filter((usage): usage is CompanionUsageInfo => usage !== null);
+                ).filter((usage): usage is VerifiedCompanionUsage => usage !== null);
 
                 if (!info && verifiedUsages.length === 0) {
                     return null;
@@ -212,7 +283,10 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
         },
 
         watchChange(id) {
-            hocInfoCache.delete(stripQuery(id));
+            const key = stripQuery(id);
+
+            hocInfoCache.delete(key);
+            reExportsCache.delete(key);
         },
     };
 };
