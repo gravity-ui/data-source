@@ -4,16 +4,17 @@ import {Visitor, parseSync} from 'oxc-parser';
 import type {CompanionSuffix} from './utils';
 import {COMPANION_TYPES, getHocString, isCompanionSuffix} from './utils';
 
-export interface AuxInfo {
+export interface ArgInfo {
     argSource: string;
     argStart: number;
     argEnd: number;
+}
+
+export interface AuxInfo extends ArgInfo {
     imports: ImportDeclaration[];
 }
 
-export type ContentInfo =
-    | {kind: 'identifier'; name: string}
-    | {kind: 'inline'; argSource: string; argStart: number; argEnd: number};
+export type ContentInfo = {kind: 'identifier'; name: string} | ({kind: 'inline'} & ArgInfo);
 
 export interface HocInfo {
     hocImportSource: string;
