@@ -138,6 +138,90 @@ export function extractHocInfo(
     return null;
 }
 
+export interface ReExportTarget {
+    source: string;
+    importedName: string;
+}
+
+export interface ReExports {
+    named: Map<string, ReExportTarget>;
+    stars: string[];
+}
+
+// eslint-disable-next-line complexity
+export function extractReExports(filename: string, source: string): ReExports {
+    const named = new Map<string, ReExportTarget>();
+    const stars: string[] = [];
+
+    const program = parseProgram(filename, source);
+    if (!program) {
+        return {named, stars};
+    }
+
+    const localImports = new Map<string, ReExportTarget>();
+
+    for (const node of program.body) {
+        if (node.type !== 'ImportDeclaration' || node.importKind === 'type') {
+            continue;
+        }
+
+        for (const spec of node.specifiers) {
+            if (spec.type !== 'ImportSpecifier' || spec.importKind === 'type') {
+                continue;
+            }
+
+            const importedName =
+                spec.imported.type === 'Literal' ? spec.imported.value : spec.imported.name;
+            localImports.set(spec.local.name, {source: node.source.value, importedName});
+        }
+    }
+
+    for (const node of program.body) {
+        if (node.type === 'ExportAllDeclaration' && node.exportKind !== 'type' && !node.exported) {
+            stars.push(node.source.value);
+            continue;
+        }
+
+        if (node.type !== 'ExportNamedDeclaration' || node.exportKind === 'type') {
+            continue;
+        }
+
+        if (node.source) {
+            const src = node.source.value;
+            for (const spec of node.specifiers) {
+                if (spec.exportKind === 'type') {
+                    continue;
+                }
+                const localName =
+                    spec.local.type === 'Literal' ? spec.local.value : spec.local.name;
+                const exportedName =
+                    spec.exported.type === 'Literal' ? spec.exported.value : spec.exported.name;
+                named.set(exportedName, {source: src, importedName: localName});
+            }
+            continue;
+        }
+
+        if (node.declaration) {
+            continue;
+        }
+
+        for (const spec of node.specifiers) {
+            if (spec.exportKind === 'type' || spec.local.type === 'Literal') {
+                continue;
+            }
+            const target = localImports.get(spec.local.name);
+            if (!target) {
+                continue;
+            }
+            const exportedName =
+                spec.exported.type === 'Literal' ? spec.exported.value : spec.exported.name;
+            named.set(exportedName, target);
+        }
+    }
+
+    return {named, stars};
+}
+
 export interface ImportSpecifierMeta {
     localName: string;
     importedName: string;
