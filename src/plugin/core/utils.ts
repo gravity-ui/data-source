@@ -35,11 +35,11 @@ export function makeVirtualId(type: CompanionType, sourceFile: string): string {
 export function parseVirtualId(id: string): {type: CompanionType; sourceFile: string} | null {
     const prefixIndex = id.indexOf(VIRTUAL_PREFIX);
 
-    if (prefixIndex !== 0) {
+    if (prefixIndex === -1) {
         return null;
     }
 
-    const rest = id.slice(VIRTUAL_PREFIX.length + 1);
+    const rest = id.slice(prefixIndex + VIRTUAL_PREFIX.length + 1);
     const colonIndex = rest.indexOf(':');
 
     if (colonIndex === -1) {
