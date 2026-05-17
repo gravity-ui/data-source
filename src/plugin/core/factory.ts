@@ -3,8 +3,8 @@ import fs from 'node:fs';
 import MagicString from 'magic-string';
 import type {UnpluginBuildContext, UnpluginContext, UnpluginFactory} from 'unplugin';
 
-import type {ArgInfo, CompanionAccess, CompanionUsageInfo, HocInfo, ReExports} from './extract';
-import {extractHocInfo, extractReExports, extractUsages} from './extract';
+import type {CompanionUsageInfo, HocInfo, ReExports} from './extract';
+import {extractHocInfo, extractReExports, extractUsages, isAccessInsideArg} from './extract';
 import type {GenerateOptions} from './generate';
 import {generateAuxModuleCode, generateLazyModule, transformJsx} from './generate';
 import {resolveSourceFile} from './resolve';
@@ -280,10 +280,10 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
 
                 const s = new MagicString(code);
                 if (info) {
-                    transformDefinitionModule(s, id, info);
+                    transformDefinitionModule(s, id, info, verifiedUsages);
                 }
                 if (verifiedUsages.length > 0) {
-                    transformUsages(s, verifiedUsages);
+                    transformUsages(s, verifiedUsages, info);
                 }
 
                 if (!s.hasChanged()) {
@@ -306,18 +306,22 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
     };
 };
 
-function isInside(info: ArgInfo, access: CompanionAccess): boolean {
-    return info.argStart <= access.start && access.end <= info.argEnd;
-}
-
-// transformDefinitionModule overwrites HOC arg ranges wholesale (the entire arg becomes
-// `${name}Loading`/`Error`/`Content`). A second overwrite of a companion access inside
-// such a range would crash MagicString with "Cannot split a chunk that has already been
-// edited". Drop those accesses here.
+// transformDefinitionModule overwrites the loading/error arg ranges wholesale
+// (the entire arg becomes `${name}Loading`/`Error`). A second overwrite of a
+// companion access inside such a range would crash MagicString with "Cannot
+// split a chunk that has already been edited". Loading/error are also
+// re-processed by the aux-pipeline in the load hook, so we drop accesses here.
 //
-// hasOtherUsages stays correct without recomputation: each dropped access contributed
-// exactly one entry to totalStarts (via the object Identifier visited as a child of the
-// MemberExpression), so totalStarts.size - accesses.length is preserved.
+// Inline-content accesses are NOT dropped: they are rewritten on a nested
+// MagicString inside transformDefinitionModule (see renderInlineContent in
+// transform.ts), and transformUsages skips overwriting them on the outer `s`.
+// Keeping them in the usage list lets transformUsages still emit the companion
+// import and remove the now-unused original import.
+//
+// hasOtherUsages stays correct without recomputation: each dropped access
+// contributed exactly one entry to totalStarts (via the object Identifier
+// visited as a child of the MemberExpression), so totalStarts.size -
+// accesses.length is preserved.
 function dropAccessesInsideHocArgs(
     info: HocInfo,
     usages: CompanionUsageInfo[],
@@ -327,9 +331,8 @@ function dropAccessesInsideHocArgs(
     for (const usage of usages) {
         const accesses = usage.accesses.filter(
             (access) =>
-                !isInside(info.loading, access) &&
-                !(info.error && isInside(info.error, access)) &&
-                !(info.content.kind === 'inline' && isInside(info.content, access)),
+                !isAccessInsideArg(info.loading, access) &&
+                !(info.error && isAccessInsideArg(info.error, access)),
         );
 
         if (accesses.length === 0) {
