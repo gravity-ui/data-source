@@ -29,7 +29,7 @@ export function isCompanionSuffix(suffix: string): suffix is CompanionSuffix {
 }
 
 export function makeVirtualId(type: CompanionType, sourceFile: string): string {
-    return `${VIRTUAL_PREFIX}:${type}:${sourceFile}`;
+    return `${VIRTUAL_PREFIX}:${type}:${stripQuery(sourceFile)}`;
 }
 
 export function parseVirtualId(id: string): {type: CompanionType; sourceFile: string} | null {
@@ -58,8 +58,9 @@ export function parseVirtualId(id: string): {type: CompanionType; sourceFile: st
 // TODO(DakEnviy, plugin): Think about imports like './Foo.test'
 export function makeCompanionId(type: CompanionType, sourceFile: string): string {
     const suffix = COMPANION_TYPES[type];
-    const ext = path.extname(sourceFile);
-    const base = ext ? sourceFile.slice(0, -ext.length) : sourceFile;
+    const cleanSourceFile = stripQuery(sourceFile);
+    const ext = path.extname(cleanSourceFile);
+    const base = ext ? cleanSourceFile.slice(0, -ext.length) : cleanSourceFile;
     return `${base}.${suffix}${ext}`;
 }
 
@@ -85,12 +86,11 @@ export function isRelativeId(id: string): boolean {
 
 export function toRelativeImportSource(fromFile: string, toFile: string): string {
     const fromDir = path.dirname(stripQuery(fromFile));
-    let rel = path.relative(fromDir, toFile);
 
+    let rel = path.relative(fromDir, toFile);
     if (path.sep !== '/') {
         rel = rel.split(path.sep).join('/');
     }
-
     if (!rel.startsWith('.')) {
         rel = `./${rel}`;
     }

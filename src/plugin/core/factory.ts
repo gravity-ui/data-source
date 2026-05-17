@@ -1,12 +1,12 @@
 import fs from 'node:fs';
 
 import MagicString from 'magic-string';
-import type {UnpluginFactory} from 'unplugin';
+import type {UnpluginBuildContext, UnpluginContext, UnpluginFactory} from 'unplugin';
 
 import type {ArgInfo, CompanionAccess, CompanionUsageInfo, HocInfo, ReExports} from './extract';
 import {extractHocInfo, extractReExports, extractUsages} from './extract';
 import type {GenerateOptions} from './generate';
-import {generateAuxModule, generateLazyModule} from './generate';
+import {generateAuxModuleCode, generateLazyModule, transformJsx} from './generate';
 import {resolveSourceFile} from './resolve';
 import type {VerifiedCompanionUsage} from './transform';
 import {transformDefinitionModule, transformUsages} from './transform';
@@ -15,6 +15,7 @@ import {
     assertNever,
     getHocString,
     isRelativeId,
+    makeCompanionId,
     makeVirtualId,
     parseCompanionId,
     parseVirtualId,
@@ -99,6 +100,86 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
         return reExports;
     };
 
+    const resolveHocSourceFile = async (
+        ctx: UnpluginBuildContext & UnpluginContext,
+        file: string,
+        importedName: string,
+        visited: Set<string> = new Set(),
+    ): Promise<{file: string; info: HocInfo} | null> => {
+        const visitKey = `${file}\0${importedName}`;
+        if (visited.has(visitKey)) {
+            return null;
+        }
+        visited.add(visitKey);
+
+        const directInfo = getHocInfo(file);
+        if (directInfo && directInfo.exportedName === importedName) {
+            return {file, info: directInfo};
+        }
+
+        const reExports = getReExports(file);
+
+        const named = reExports.named.get(importedName);
+        if (named) {
+            const resolved = await resolveSourceFile(ctx, named.source, file);
+            if (resolved) {
+                const next = await resolveHocSourceFile(ctx, resolved, named.importedName, visited);
+                if (next) {
+                    return next;
+                }
+            }
+        }
+
+        for (const starSource of reExports.stars) {
+            const resolved = await resolveSourceFile(ctx, starSource, file);
+            if (!resolved) {
+                continue;
+            }
+            const next = await resolveHocSourceFile(ctx, resolved, importedName, visited);
+            if (next) {
+                return next;
+            }
+        }
+
+        return null;
+    };
+
+    const verifyUsages = async (
+        ctx: UnpluginBuildContext & UnpluginContext,
+        usages: CompanionUsageInfo[],
+        importerId: string,
+    ): Promise<VerifiedCompanionUsage[]> => {
+        const verified = await Promise.all(
+            usages.map(async (usage) => {
+                const resolvedSourceFile = await resolveSourceFile(
+                    ctx,
+                    usage.decl.source,
+                    importerId,
+                );
+                if (!resolvedSourceFile) {
+                    return null;
+                }
+
+                const target = await resolveHocSourceFile(
+                    ctx,
+                    resolvedSourceFile,
+                    usage.spec.importedName,
+                );
+                if (!target) {
+                    return null;
+                }
+
+                return {
+                    usage,
+                    hocImportSource: toRelativeImportSource(importerId, target.file),
+                    hocExportedName: target.info.exportedName,
+                };
+            }),
+        );
+
+        return verified.filter((usage): usage is VerifiedCompanionUsage => usage !== null);
+    };
+
     return {
         name: 'data-source-lazy',
         enforce: 'pre',
@@ -123,7 +204,6 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
                     companion.sourceFile,
                     normalizedImporter,
                 );
-
                 return resolvedSourceFile && makeVirtualId(companion.type, resolvedSourceFile);
             }
 
@@ -136,7 +216,7 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
 
         load: {
             filter: {id: new RegExp(VIRTUAL_PREFIX)},
-            handler(id) {
+            async handler(id) {
                 const parsedId = parseVirtualId(id);
                 if (!parsedId) {
                     return null;
@@ -154,13 +234,21 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
                     if (!auxInfo) {
                         return null;
                     }
-                    return generateAuxModule(
-                        parsedId.sourceFile,
-                        info.exportedName,
-                        auxInfo,
-                        parsedId.type,
-                        options.generateOptions,
-                    );
+
+                    const filename = makeCompanionId(parsedId.type, parsedId.sourceFile);
+                    const code = generateAuxModuleCode(info.exportedName, auxInfo, parsedId.type);
+
+                    const usages = extractUsages(filename, code);
+                    const verifiedUsages = await verifyUsages(this, usages, parsedId.sourceFile);
+
+                    let resultCode = code;
+                    if (verifiedUsages.length > 0) {
+                        const s = new MagicString(code);
+                        transformUsages(s, verifiedUsages);
+                        resultCode = s.toString();
+                    }
+
+                    return transformJsx(filename, resultCode, options.generateOptions);
                 }
 
                 if (parsedId.type === 'lazy') {
@@ -184,82 +272,7 @@ export const dataSourceLazyUnpluginFactory: UnpluginFactory<
                 }
 
                 const filteredUsages = info ? dropAccessesInsideHocArgs(info, usages) : usages;
-
-                const resolveHocSourceFile = async (
-                    file: string,
-                    importedName: string,
-                    visited: Set<string> = new Set(),
-                ): Promise<{file: string; info: HocInfo} | null> => {
-                    const visitKey = `${file}\0${importedName}`;
-                    if (visited.has(visitKey)) {
-                        return null;
-                    }
-                    visited.add(visitKey);
-
-                    const directInfo = getHocInfo(file);
-                    if (directInfo && directInfo.exportedName === importedName) {
-                        return {file, info: directInfo};
-                    }
-
-                    const reExports = getReExports(file);
-
-                    const named = reExports.named.get(importedName);
-                    if (named) {
-                        const resolved = await resolveSourceFile(this, named.source, file);
-                        if (resolved) {
-                            const next = await resolveHocSourceFile(
-                                resolved,
-                                named.importedName,
-                                visited,
-                            );
-                            if (next) {
-                                return next;
-                            }
-                        }
-                    }
-
-                    for (const starSource of reExports.stars) {
-                        const resolved = await resolveSourceFile(this, starSource, file);
-                        if (!resolved) {
-                            continue;
-                        }
-                        const next = await resolveHocSourceFile(resolved, importedName, visited);
-                        if (next) {
-                            return next;
-                        }
-                    }
-
-                    return null;
-                };
-
-                const verifiedUsages = (
-                    await Promise.all(
-                        filteredUsages.map(async (usage) => {
-                            const resolvedSourceFile = await resolveSourceFile(
-                                this,
-                                usage.decl.source,
-                                id,
-                            );
-                            if (!resolvedSourceFile) {
-                                return null;
-                            }
-
-                            const target = await resolveHocSourceFile(
-                                resolvedSourceFile,
-                                usage.spec.importedName,
-                            );
-                            if (!target) {
-                                return null;
-                            }
-
-                            return {
-                                usage,
-                                hocImportSource: toRelativeImportSource(id, target.file),
-                                hocExportedName: target.info.exportedName,
-                            };
-                        }),
-                    )
-                ).filter((usage): usage is VerifiedCompanionUsage => usage !== null);
+                const verifiedUsages = await verifyUsages(this, filteredUsages, id);
 
                 if (!info && verifiedUsages.length === 0) {
                     return null;
