@@ -1,11 +1,22 @@
 import path from 'node:path';
 
-import type MagicString from 'magic-string';
+import MagicString from 'magic-string';
 
-import type {CompanionUsageInfo, HocInfo, ImportDeclarationMeta} from './extract';
+import {
+    type ArgInfo,
+    type CompanionUsageInfo,
+    type HocInfo,
+    type ImportDeclarationMeta,
+    isAccessInsideArg,
+} from './extract';
 import {COMPANION_TYPE_BY_SUFFIX, makeCompanionId, stripQuery} from './utils';
 
-export function transformDefinitionModule(s: MagicString, filename: string, info: HocInfo): void {
+export function transformDefinitionModule(
+    s: MagicString,
+    filename: string,
+    info: HocInfo,
+    verifiedUsages: VerifiedCompanionUsage[],
+): void {
     const name = info.exportedName;
     const cleanFilename = stripQuery(filename);
     const localSource = `./${path.basename(cleanFilename, path.extname(cleanFilename))}`;
@@ -36,10 +47,38 @@ export function transformDefinitionModule(s: MagicString, filename: string, info
     if (info.content.kind === 'identifier') {
         s.append(`\nexport {${info.content.name} as ${name}Content};\n`);
     } else {
-        s.appendLeft(info.hocExportStart, `const ${name}Content = ${info.content.argSource};\n\n`);
+        const contentSource =
+            verifiedUsages.length > 0
+                ? renderInlineContent(info.content, verifiedUsages)
+                : info.content.argSource;
+
+        s.appendLeft(info.hocExportStart, `const ${name}Content = ${contentSource};\n\n`);
         s.overwrite(info.content.argStart, info.content.argEnd, `${name}Content`);
         s.append(`\nexport {${name}Content};\n`);
     }
+}
+
+// Companion accesses inside an inline content arg can't be overwritten on the
+// outer MagicString — the whole arg range is wholesale-overwritten to
+// `${name}Content`, and a nested overwrite would crash with "Cannot split a
+// chunk that has already been edited". Instead, rewrite them on a separate
+// MagicString over `content.argSource` and hoist the transformed text.
+function renderInlineContent(content: ArgInfo, usages: VerifiedCompanionUsage[]): string {
+    const s = new MagicString(content.argSource);
+
+    for (const {usage} of usages) {
+        for (const access of usage.accesses) {
+            if (isAccessInsideArg(content, access)) {
+                s.overwrite(
+                    access.start - content.argStart,
+                    access.end - content.argStart,
+                    `${usage.spec.localName}${access.prop}`,
+                );
+            }
+        }
+    }
+
+    return s.toString();
 }
 
 export interface VerifiedCompanionUsage {
@@ -48,10 +87,21 @@ export interface VerifiedCompanionUsage {
     hocExportedName: string;
 }
 
-export function transformUsages(s: MagicString, usages: VerifiedCompanionUsage[]): void {
+export function transformUsages(
+    s: MagicString,
+    usages: VerifiedCompanionUsage[],
+    info?: HocInfo | null,
+): void {
+    const inlineContent = info?.content.kind === 'inline' ? info.content : null;
+
     // 1. Replace X.Prop → XProp
     for (const {usage} of usages) {
         for (const access of usage.accesses) {
+            // Skip accesses inside an inline content arg — those are rewritten by
+            // transformDefinitionModule on a nested MagicString (see renderInlineContent).
+            if (inlineContent && isAccessInsideArg(inlineContent, access)) {
+                continue;
+            }
             s.overwrite(access.start, access.end, `${usage.spec.localName}${access.prop}`);
         }
     }

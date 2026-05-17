@@ -379,6 +379,10 @@ export function extractUsages(filename: string, source: string): CompanionUsageI
     return result;
 }
 
+export function isAccessInsideArg(arg: ArgInfo, access: CompanionAccess): boolean {
+    return arg.argStart <= access.start && access.end <= arg.argEnd;
+}
+
 function collectIdentifiers(node: OwnNode): Set<string> {
     const result = new Set<string>();
 
