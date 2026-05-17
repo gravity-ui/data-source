@@ -18,17 +18,14 @@ export interface SourceWithMap {
     map: string;
 }
 
-export function generateAuxModule(
-    sourceFile: string,
+export function generateAuxModuleCode(
     exportedName: string,
     info: AuxInfo,
     type: 'loading' | 'error',
-    options: GenerateOptions = {},
-): SourceWithMap {
+): string {
     const suffix = COMPANION_TYPES[type];
-    const cleanSourceFile = stripQuery(sourceFile);
 
-    const code = [
+    return [
         renderImports(info.imports),
         '',
         `export const ${exportedName}${suffix} = ${info.argSource};`,
@@ -36,8 +33,6 @@ export function generateAuxModule(
     ]
         .join('\n')
         .trimStart();
-
-    return transformJsx(makeCompanionId(type, cleanSourceFile), code, options);
 }
 
 export function generateLazyModule(
@@ -88,8 +83,11 @@ export function generateLazyModule(
 
     return {code, map: map.toString()};
 }
-
-function transformJsx(filename: string, code: string, options: GenerateOptions): SourceWithMap {
+export function transformJsx(
+    filename: string,
+    code: string,
+    options: GenerateOptions = {},
+): SourceWithMap {
     const result = transformSync(filename, code, {
         lang: 'tsx',
         jsx: options.jsx,
