@@ -2,6 +2,7 @@ export * from './components/Async';
 export * from './components/AsyncBoundary';
 export * from './components/DataLoader';
 export * from './components/DataInfiniteLoader';
+export * from './components/DataInfiniteWrapper';
 export * from './components/EmptyView';
 export type {ErrorAction, ErrorViewProps} from './components/types';
 

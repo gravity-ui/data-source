@@ -1,30 +1,16 @@
-import type {ComponentType, ReactNode} from 'react';
+import type {ComponentType} from 'react';
 
-import type {DataLoaderStatus} from '../../../core';
-import type {ErrorAction, ErrorViewProps} from '../types';
-
-export interface MoreViewProps {
-    isLoading: boolean;
-    onClick: () => void;
-}
+import type {DataInfiniteWrapperProps, MoreViewProps} from '../DataInfiniteWrapper';
+import type {DataLoaderProps} from '../DataLoader';
+import type {ErrorViewProps} from '../types';
 
 export interface DataInfiniteLoaderProps<
     TError,
     TLoadingViewProps extends object = {},
     TErrorViewProps extends ErrorViewProps<TError> = ErrorViewProps<TError>,
     TMoreViewProps extends MoreViewProps = MoreViewProps,
-> {
-    status: DataLoaderStatus;
-    error: TError | null;
-    errorAction?: ErrorAction | ErrorAction['handler'];
-    hasNextPage: boolean;
-    fetchNextPage: () => unknown;
-    isFetchingNextPage: boolean;
-    LoadingView: ComponentType<TLoadingViewProps>;
-    ErrorView: ComponentType<TErrorViewProps>;
+> extends DataLoaderProps<TError, TLoadingViewProps, TErrorViewProps>,
+        Omit<DataInfiniteWrapperProps, 'MoreView' | 'children'> {
     MoreView: ComponentType<TMoreViewProps>;
-    loadingViewProps?: TLoadingViewProps;
-    errorViewProps?: Omit<TErrorViewProps, keyof ErrorViewProps<TError>>;
     moreViewProps?: Omit<TMoreViewProps, keyof MoreViewProps>;
-    children: ReactNode;
 }
