@@ -2,9 +2,10 @@ import React from 'react';
 
 import {fireEvent, render, screen} from '@testing-library/react';
 
+import type {MoreViewProps} from '../../DataInfiniteWrapper';
 import type {ErrorViewProps} from '../../types';
 import {DataInfiniteLoader} from '../DataInfiniteLoader';
-import type {DataInfiniteLoaderProps, MoreViewProps} from '../types';
+import type {DataInfiniteLoaderProps} from '../types';
 
 const MockLoadingView = () => <div data-testid="loading-view">Loading...</div>;
 const MockErrorView: React.FC<ErrorViewProps<Error>> = ({error, action}) => (
