@@ -2,6 +2,10 @@
 
 ## [0.9.0](https://github.com/gravity-ui/data-source/compare/v0.8.2...v0.9.0) (2026-04-02)
 
+### ⚠ BREAKING CHANGES
+
+* `refetch` call is ignored for disabled queries
+* `refetch` returns `Promise<Void>` instead of result
 
 ### Features
 
@@ -24,6 +28,9 @@
 
 ## [0.8.0](https://github.com/gravity-ui/data-source/compare/v0.7.0...v0.8.0) (2025-12-03)
 
+### ⚠ BREAKING CHANGES
+
+* `refetch` call is ignored for disabled queries
 
 ### Features
 
