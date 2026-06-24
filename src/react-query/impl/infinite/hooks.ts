@@ -65,7 +65,7 @@ export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSou
         [state.data],
     );
 
-    const isDisabled = composedOptions.enabled === false || composedOptions.queryFn === skipToken;
+    const isDisabledRefetch = composedOptions.queryFn === skipToken;
 
     return {
         ...state,
@@ -73,6 +73,6 @@ export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSou
         data: transformedData,
         originalStatus: state.status,
         originalData: state.data,
-        refetch: isDisabled ? warnDisabledRefetch : wrapRefetch(state.refetch),
+        refetch: isDisabledRefetch ? warnDisabledRefetch : wrapRefetch(state.refetch),
     } as DataSourceState<TDataSource>;
 };

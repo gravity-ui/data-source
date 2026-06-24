@@ -54,12 +54,12 @@ export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
     const composedOptions = usePlainQueryDataOptions(extendedOptions);
     const state = useQuery(composedOptions);
 
-    const isDisabled = composedOptions.enabled === false || composedOptions.queryFn === skipToken;
+    const isDisabledRefetch = composedOptions.queryFn === skipToken;
 
     return {
         ...state,
         status: normalizeStatus(state.status, state.fetchStatus),
         originalStatus: state.status,
-        refetch: isDisabled ? warnDisabledRefetch : wrapRefetch(state.refetch),
+        refetch: isDisabledRefetch ? warnDisabledRefetch : wrapRefetch(state.refetch),
     } as DataSourceState<TDataSource>;
 };

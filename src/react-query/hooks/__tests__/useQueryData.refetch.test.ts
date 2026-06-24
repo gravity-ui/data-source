@@ -117,16 +117,19 @@ describe('useQueryData refetch behavior', () => {
             expect(originalRefetch).toHaveBeenCalledTimes(1);
         });
 
-        it('should use warnDisabledRefetch when enabled: false', () => {
-            const originalRefetch = jest.fn();
+        it('should wrap refetch when enabled: false', async () => {
+            const originalRefetch = jest.fn().mockResolvedValue({data: 'test', status: 'success'});
             mockUseQuery.mockReturnValue(createMockQueryResult(originalRefetch) as any);
 
             const {result} = renderHook(() =>
                 useQueryData(plainDataSource, {id: 1}, {enabled: false}),
             );
 
-            expect(result.current.refetch).toBe(mockWarnDisabledRefetch);
             expect(result.current.refetch).not.toBe(originalRefetch);
+            expect(result.current.refetch).not.toBe(mockWarnDisabledRefetch);
+
+            await result.current.refetch();
+            expect(originalRefetch).toHaveBeenCalledTimes(1);
         });
 
         it('should use warnDisabledRefetch when params is idle', () => {
@@ -164,16 +167,22 @@ describe('useQueryData refetch behavior', () => {
             expect(originalRefetch).toHaveBeenCalledTimes(1);
         });
 
-        it('should use warnDisabledRefetch when enabled: false', () => {
-            const originalRefetch = jest.fn();
+        it('should wrap refetch when enabled: false', async () => {
+            const originalRefetch = jest.fn().mockResolvedValue({
+                data: {pages: [], pageParams: []},
+                status: 'success',
+            });
             mockUseInfiniteQuery.mockReturnValue(createMockInfiniteResult(originalRefetch) as any);
 
             const {result} = renderHook(() =>
                 useQueryData(infiniteDataSource, {id: 1}, {enabled: false}),
             );
 
-            expect(result.current.refetch).toBe(mockWarnDisabledRefetch);
             expect(result.current.refetch).not.toBe(originalRefetch);
+            expect(result.current.refetch).not.toBe(mockWarnDisabledRefetch);
+
+            await result.current.refetch();
+            expect(originalRefetch).toHaveBeenCalledTimes(1);
         });
 
         it('should use warnDisabledRefetch when params is idle', () => {
