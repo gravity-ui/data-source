@@ -2,6 +2,6 @@ import {defineConfig} from '@gravity-ui/app-builder';
 
 export default defineConfig({
     lib: {
-        internalDirs: ['__tests__'],
+        internalDirs: ['.storybook', '**/__tests__', '**/__stories__', 'plugin'],
     },
 });

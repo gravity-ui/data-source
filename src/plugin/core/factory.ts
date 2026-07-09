@@ -1,0 +1,351 @@
+import fs from 'node:fs';
+
+import MagicString from 'magic-string';
+import type {UnpluginBuildContext, UnpluginContext, UnpluginFactory} from 'unplugin';
+
+import type {CompanionUsageInfo, HocInfo, ReExports} from './extract';
+import {extractHocInfo, extractReExports, extractUsages, isAccessInsideArg} from './extract';
+import type {GenerateOptions} from './generate';
+import {generateAuxModuleCode, generateLazyModule, transformJsx} from './generate';
+import {resolveSourceFile} from './resolve';
+import type {VerifiedCompanionUsage} from './transform';
+import {transformDefinitionModule, transformUsages} from './transform';
+import {
+    VIRTUAL_PREFIX,
+    assertNever,
+    getHocString,
+    isRelativeId,
+    makeCompanionId,
+    makeVirtualId,
+    parseCompanionId,
+    parseVirtualId,
+    stripQuery,
+    toRelativeImportSource,
+} from './utils';
+
+export interface DataSourceLazyHocPattern {
+    from: string;
+    name: string;
+}
+
+export interface DataSourceLazyPluginOptions {
+    hocs?: DataSourceLazyHocPattern[];
+    include?: RegExp | RegExp[];
+    exclude?: RegExp | RegExp[];
+    generateOptions?: GenerateOptions;
+}
+
+export const DEFAULT_HOCS: DataSourceLazyPluginOptions['hocs'] = [
+    {from: '@gravity-ui/data-source', name: 'withAsync'},
+    {from: '@gravity-ui/data-source', name: 'withAsyncBoundary'},
+    {from: '@gravity-ui/data-source', name: 'withQueryAsyncBoundary'},
+];
+
+export const DEFAULT_INCLUDE = /\.(tsx?|jsx?)$/;
+
+const VIRTUAL_EXCLUDE = new RegExp(`${VIRTUAL_PREFIX}|${encodeURIComponent(VIRTUAL_PREFIX)}`);
+
+export const dataSourceLazyUnpluginFactory: UnpluginFactory<
+    DataSourceLazyPluginOptions | undefined
+> = (options = {}) => {
+    const hocPatterns = options.hocs ?? DEFAULT_HOCS;
+    const include = options.include ?? DEFAULT_INCLUDE;
+    const exclude = [VIRTUAL_EXCLUDE];
+
+    if (Array.isArray(options.exclude)) {
+        exclude.push(...options.exclude);
+    } else if (options.exclude) {
+        exclude.push(options.exclude);
+    }
+
+    const hocsSet = new Set(hocPatterns.map((pattern) => getHocString(pattern.from, pattern.name)));
+    const hocsRegexp = new RegExp(
+        Array.from(new Set(hocPatterns.map((pattern) => pattern.name)))
+            .map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+            .join('|'),
+    );
+
+    const hocInfoCache = new Map<string, HocInfo | null>();
+    const reExportsCache = new Map<string, ReExports>();
+
+    const getHocInfo = (sourceFile: string, source?: string): HocInfo | null => {
+        const key = stripQuery(sourceFile);
+
+        const cachedInfo = hocInfoCache.get(key);
+        if (cachedInfo !== undefined) {
+            return cachedInfo;
+        }
+
+        const resolvedSource = source ?? fs.readFileSync(key, 'utf-8');
+        const info = hocsRegexp.test(resolvedSource)
+            ? extractHocInfo(hocsSet, key, resolvedSource)
+            : null;
+
+        hocInfoCache.set(key, info);
+        return info;
+    };
+
+    const getReExports = (sourceFile: string, source?: string): ReExports => {
+        const key = stripQuery(sourceFile);
+
+        const cachedReExports = reExportsCache.get(key);
+        if (cachedReExports) {
+            return cachedReExports;
+        }
+
+        const resolvedSource = source ?? fs.readFileSync(key, 'utf-8');
+        const reExports = extractReExports(key, resolvedSource);
+
+        reExportsCache.set(key, reExports);
+        return reExports;
+    };
+
+    const resolveHocSourceFile = async (
+        ctx: UnpluginBuildContext & UnpluginContext,
+        file: string,
+        importedName: string,
+        visited: Set<string> = new Set(),
+    ): Promise<{file: string; info: HocInfo} | null> => {
+        const visitKey = `${file}\0${importedName}`;
+        if (visited.has(visitKey)) {
+            return null;
+        }
+        visited.add(visitKey);
+
+        const directInfo = getHocInfo(file);
+        if (directInfo && directInfo.exportedName === importedName) {
+            return {file, info: directInfo};
+        }
+
+        const reExports = getReExports(file);
+
+        const named = reExports.named.get(importedName);
+        if (named) {
+            const resolved = await resolveSourceFile(ctx, named.source, file);
+            if (resolved) {
+                const next = await resolveHocSourceFile(ctx, resolved, named.importedName, visited);
+                if (next) {
+                    return next;
+                }
+            }
+        }
+
+        for (const starSource of reExports.stars) {
+            const resolved = await resolveSourceFile(ctx, starSource, file);
+            if (!resolved) {
+                continue;
+            }
+            const next = await resolveHocSourceFile(ctx, resolved, importedName, visited);
+            if (next) {
+                return next;
+            }
+        }
+
+        return null;
+    };
+
+    const verifyUsages = async (
+        ctx: UnpluginBuildContext & UnpluginContext,
+        usages: CompanionUsageInfo[],
+        importerId: string,
+    ): Promise<VerifiedCompanionUsage[]> => {
+        const verified = await Promise.all(
+            usages.map(async (usage) => {
+                const resolvedSourceFile = await resolveSourceFile(
+                    ctx,
+                    usage.decl.source,
+                    importerId,
+                );
+                if (!resolvedSourceFile) {
+                    return null;
+                }
+
+                const target = await resolveHocSourceFile(
+                    ctx,
+                    resolvedSourceFile,
+                    usage.spec.importedName,
+                );
+                if (!target) {
+                    return null;
+                }
+
+                return {
+                    usage,
+                    hocImportSource: toRelativeImportSource(importerId, target.file),
+                    hocExportedName: target.info.exportedName,
+                };
+            }),
+        );
+
+        return verified.filter((usage): usage is VerifiedCompanionUsage => usage !== null);
+    };
+
+    return {
+        name: 'data-source-lazy',
+        enforce: 'pre',
+
+        async resolveId(id, importer) {
+            if (!importer) {
+                return null;
+            }
+
+            const companion = parseCompanionId(id);
+            const parsedImporter = parseVirtualId(importer);
+            const normalizedImporter = parsedImporter?.sourceFile ?? importer;
+
+            if (companion) {
+                const resolvedId = await resolveSourceFile(this, id, normalizedImporter);
+                if (resolvedId) {
+                    return null;
+                }
+
+                const resolvedSourceFile = await resolveSourceFile(
+                    this,
+                    companion.sourceFile,
+                    normalizedImporter,
+                );
+                return resolvedSourceFile && makeVirtualId(companion.type, resolvedSourceFile);
+            }
+
+            if (parsedImporter && isRelativeId(id)) {
+                return resolveSourceFile(this, id, parsedImporter.sourceFile);
+            }
+
+            return null;
+        },
+
+        load: {
+            filter: {id: new RegExp(VIRTUAL_PREFIX)},
+            async handler(id) {
+                const parsedId = parseVirtualId(id);
+                if (!parsedId) {
+                    return null;
+                }
+
+                this.addWatchFile(parsedId.sourceFile);
+
+                const info = getHocInfo(parsedId.sourceFile);
+                if (!info) {
+                    return null;
+                }
+
+                if (parsedId.type === 'loading' || parsedId.type === 'error') {
+                    const auxInfo = info[parsedId.type];
+                    if (!auxInfo) {
+                        return null;
+                    }
+
+                    const filename = makeCompanionId(parsedId.type, parsedId.sourceFile);
+                    const code = generateAuxModuleCode(info.exportedName, auxInfo, parsedId.type);
+
+                    const usages = extractUsages(filename, code);
+                    const verifiedUsages = await verifyUsages(this, usages, parsedId.sourceFile);
+
+                    let resultCode = code;
+                    if (verifiedUsages.length > 0) {
+                        const s = new MagicString(code);
+                        transformUsages(s, verifiedUsages);
+                        resultCode = s.toString();
+                    }
+
+                    return transformJsx(filename, resultCode, options.generateOptions);
+                }
+
+                if (parsedId.type === 'lazy') {
+                    return generateLazyModule(parsedId.sourceFile, info, options.generateOptions);
+                }
+
+                return assertNever(parsedId.type);
+            },
+        },
+
+        transform: {
+            filter: {
+                id: {include, exclude},
+            },
+            async handler(code, id) {
+                const info = getHocInfo(id, code);
+                const usages = extractUsages(id, code);
+
+                if (!info && usages.length === 0) {
+                    return null;
+                }
+
+                const filteredUsages = info ? dropAccessesInsideHocArgs(info, usages) : usages;
+                const verifiedUsages = await verifyUsages(this, filteredUsages, id);
+
+                if (!info && verifiedUsages.length === 0) {
+                    return null;
+                }
+
+                const s = new MagicString(code);
+                if (info) {
+                    transformDefinitionModule(s, id, info, verifiedUsages);
+                }
+                if (verifiedUsages.length > 0) {
+                    transformUsages(s, verifiedUsages, info);
+                }
+
+                if (!s.hasChanged()) {
+                    return null;
+                }
+
+                return {
+                    code: s.toString(),
+                    map: s.generateMap({source: id, hires: true}).toString(),
+                };
+            },
+        },
+
+        watchChange(id) {
+            const key = stripQuery(id);
+
+            hocInfoCache.delete(key);
+            reExportsCache.delete(key);
+        },
+    };
+};
+
+// transformDefinitionModule overwrites the loading/error arg ranges wholesale
+// (the entire arg becomes `${name}Loading`/`Error`). A second overwrite of a
+// companion access inside such a range would crash MagicString with "Cannot
+// split a chunk that has already been edited". Loading/error are also
+// re-processed by the aux-pipeline in the load hook, so we drop accesses here.
+//
+// Inline-content accesses are NOT dropped: they are rewritten on a nested
+// MagicString inside transformDefinitionModule (see renderInlineContent in
+// transform.ts), and transformUsages skips overwriting them on the outer `s`.
+// Keeping them in the usage list lets transformUsages still emit the companion
+// import and remove the now-unused original import.
+//
+// hasOtherUsages stays correct without recomputation: each dropped access
+// contributed exactly one entry to totalStarts (via the object Identifier
+// visited as a child of the MemberExpression), so totalStarts.size -
+// accesses.length is preserved.
+function dropAccessesInsideHocArgs(
+    info: HocInfo,
+    usages: CompanionUsageInfo[],
+): CompanionUsageInfo[] {
+    const result: CompanionUsageInfo[] = [];
+
+    for (const usage of usages) {
+        const accesses = usage.accesses.filter(
+            (access) =>
+                !isAccessInsideArg(info.loading, access) &&
+                !(info.error && isAccessInsideArg(info.error, access)),
+        );
+
+        if (accesses.length === 0) {
+            continue;
+        }
+
+        if (accesses.length === usage.accesses.length) {
+            result.push(usage);
+            continue;
+        }
+
+        result.push({...usage, accesses});
+    }
+
+    return result;
+}

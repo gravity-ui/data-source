@@ -1,7 +1,10 @@
 {
   "extends": "@gravity-ui/tsconfig",
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", ".storybook/**/*.ts", ".storybook/**/*.tsx"],
   "compilerOptions": {
-    "jsx": "react"
+    "jsx": "react",
+    "paths": {
+      "@gravity-ui/data-source": ["./src/index.ts"]
+    }
   }
 }

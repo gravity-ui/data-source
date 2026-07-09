@@ -1,5 +1,7 @@
 import React from 'react';
 
+import type {DataInfiniteWrapperProps} from '../DataInfiniteWrapper';
+import {DataInfiniteWrapper} from '../DataInfiniteWrapper';
 import type {ErrorViewProps} from '../types';
 
 import type {DataInfiniteLoaderProps} from './types';
@@ -8,24 +10,33 @@ export const DataInfiniteLoader = <TError,>({
     status,
     error,
     errorAction: errorActionProp,
+    reverse,
     hasNextPage,
-    fetchNextPage,
     isFetchingNextPage,
+    fetchNextPage,
+    hasPreviousPage,
+    isFetchingPreviousPage,
+    fetchPreviousPage,
     LoadingView,
     ErrorView,
-    MoreView,
+    MoreView: MoreViewProp,
     loadingViewProps,
     errorViewProps,
     moreViewProps,
     children,
 }: DataInfiniteLoaderProps<TError>): React.ReactNode => {
+    const MoreView = React.useCallback<DataInfiniteWrapperProps['MoreView']>(
+        (moreProps) => <MoreViewProp {...moreProps} {...moreViewProps} />,
+        [MoreViewProp, moreViewProps],
+    );
+
     const errorAction = React.useMemo<ErrorViewProps<TError>['action']>(
         () =>
             typeof errorActionProp === 'function' ? {handler: errorActionProp} : errorActionProp,
         [errorActionProp],
     );
 
-    const renderContent = () => {
+    const renderView = () => {
         if (status === 'loading') {
             return <LoadingView {...loadingViewProps} />;
         }
@@ -34,23 +45,26 @@ export const DataInfiniteLoader = <TError,>({
             return <ErrorView error={error} action={errorAction} {...errorViewProps} />;
         }
 
-        if (status === 'success' && hasNextPage) {
-            return (
-                <MoreView
-                    isLoading={isFetchingNextPage}
-                    onClick={fetchNextPage}
-                    {...moreViewProps}
-                />
-            );
-        }
-
         return null;
     };
 
     return (
         <>
-            {status === 'success' ? children : null}
-            {renderContent()}
+            {status === 'success' ? (
+                <DataInfiniteWrapper
+                    reverse={reverse}
+                    hasNextPage={hasNextPage}
+                    isFetchingNextPage={isFetchingNextPage}
+                    fetchNextPage={fetchNextPage}
+                    hasPreviousPage={hasPreviousPage}
+                    isFetchingPreviousPage={isFetchingPreviousPage}
+                    fetchPreviousPage={fetchPreviousPage}
+                    MoreView={MoreView}
+                >
+                    {children}
+                </DataInfiniteWrapper>
+            ) : null}
+            {renderView()}
         </>
     );
 };

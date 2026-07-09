@@ -4,6 +4,9 @@ node_modules
 # Artifacts
 build
 
+# Storybook
+storybook-static
+
 # Editor configs
 .vscode/*
 !.vscode/extensions.json
