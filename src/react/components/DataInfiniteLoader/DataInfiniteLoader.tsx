@@ -1,5 +1,6 @@
 import React from 'react';
 
+import type {DataInfiniteWrapperProps} from '../DataInfiniteWrapper';
 import {DataInfiniteWrapper} from '../DataInfiniteWrapper';
 import type {ErrorViewProps} from '../types';
 
@@ -18,12 +19,17 @@ export const DataInfiniteLoader = <TError,>({
     fetchPreviousPage,
     LoadingView,
     ErrorView,
-    MoreView,
+    MoreView: MoreViewProp,
     loadingViewProps,
     errorViewProps,
     moreViewProps,
     children,
 }: DataInfiniteLoaderProps<TError>): React.ReactNode => {
+    const MoreView = React.useCallback<DataInfiniteWrapperProps['MoreView']>(
+        (moreProps) => <MoreViewProp {...moreProps} {...moreViewProps} />,
+        [MoreViewProp, moreViewProps],
+    );
+
     const errorAction = React.useMemo<ErrorViewProps<TError>['action']>(
         () =>
             typeof errorActionProp === 'function' ? {handler: errorActionProp} : errorActionProp,
@@ -53,7 +59,7 @@ export const DataInfiniteLoader = <TError,>({
                     hasPreviousPage={hasPreviousPage}
                     isFetchingPreviousPage={isFetchingPreviousPage}
                     fetchPreviousPage={fetchPreviousPage}
-                    MoreView={(moreProps) => <MoreView {...moreProps} {...moreViewProps} />}
+                    MoreView={MoreView}
                 >
                     {children}
                 </DataInfiniteWrapper>
