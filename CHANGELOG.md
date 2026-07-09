@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/gravity-ui/data-source/compare/v0.9.0...v0.10.0) (2026-07-09)
+
+
+### Features
+
+* add suspense support ([#51](https://github.com/gravity-ui/data-source/issues/51)) ([56b20f4](https://github.com/gravity-ui/data-source/commit/56b20f42e2682487d993ac157ec91558b728317b))
+
 ## [0.9.0](https://github.com/gravity-ui/data-source/compare/v0.8.2...v0.9.0) (2026-04-02)
 
 ### ⚠ BREAKING CHANGES
