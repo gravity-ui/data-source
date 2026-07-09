@@ -22,7 +22,7 @@ export const Default: Story = {
     },
 };
 
-export const SuspenseLazy: Story = {
+export const Lazy: Story = {
     args: {
         UsersPage: UsersPageSuspense.Lazy,
         PostsPage: PostsPageSuspense.Lazy,

@@ -10,9 +10,9 @@ const fetchPosts = async () => {
 
     if (Math.random() < 0.5) {
         throw new AppError({
-            code: 'PERMISSION_DENIED',
-            title: 'Permission denied',
-            description: 'You are not allowed to load posts',
+            code: 'INTERNAL_SERVER_ERROR',
+            title: 'Internal server error',
+            description: 'Something went wrong on the server',
         });
     }
 

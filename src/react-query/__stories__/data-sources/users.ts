@@ -2,6 +2,7 @@ import {skipContext} from '@gravity-ui/data-source';
 
 import {MOCK_USERS} from '../mocks/users';
 import {makePlainQueryDataSource} from '../utils/data-source';
+import {AppError} from '../utils/error';
 import {sleep} from '../utils/sleep';
 
 const fetchUsers = async () => {
@@ -20,7 +21,10 @@ const fetchUser = async (request: {userId: number}) => {
     const user = MOCK_USERS.find((u) => u.id === request.userId);
 
     if (!user) {
-        throw new Error(`User "${request.userId}" is not found`);
+        throw new AppError({
+            code: 'NOT_FOUND',
+            title: `User "${request.userId}" is not found`,
+        });
     }
 
     return user;

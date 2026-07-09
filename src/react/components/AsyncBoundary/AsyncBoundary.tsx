@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type {FallbackProps} from 'react-error-boundary';
+import type {ErrorBoundaryProps} from 'react-error-boundary';
 import {ErrorBoundary} from 'react-error-boundary';
 
 import {Async} from '../Async';
@@ -13,8 +13,8 @@ export const AsyncBoundary: React.FC<AsyncBoundaryProps> = ({
     onReset,
     children,
 }) => {
-    const fallbackRender = React.useCallback(
-        ({error, resetErrorBoundary}: FallbackProps) => (
+    const fallbackRender = React.useCallback<NonNullable<ErrorBoundaryProps['fallbackRender']>>(
+        ({error, resetErrorBoundary}) => (
             <ErrorView error={error} action={{handler: resetErrorBoundary}} />
         ),
         [ErrorView],

@@ -18,7 +18,7 @@ type SuspenseQueryOptions<TDataSource extends AnyQueryDataSource> = Omit<
 >;
 
 type SuspenseQueryResult<TDataSource extends AnyQueryDataSource> = Overwrite<
-    DataSourceState<TDataSource>,
+    Omit<DataSourceState<TDataSource>, 'isPlaceholderData' | 'promise'>,
     {data: NonNullable<DataSourceData<TDataSource>>}
 >;
 

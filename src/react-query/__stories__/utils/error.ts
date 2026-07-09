@@ -7,8 +7,9 @@ export interface AppErrorProps {
 
 export class AppError extends Error implements AppErrorProps {
     static WELLKNOWN_CODES = {
+        NOT_FOUND: 'NOT_FOUND',
         UNKNOWN: 'UNKNOWN',
-    };
+    } as const;
 
     code: string;
     title: string;

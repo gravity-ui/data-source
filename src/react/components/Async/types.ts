@@ -1,4 +1,4 @@
-import type {ComponentType, ReactNode} from 'react';
+import type {ComponentType, FC, ReactNode} from 'react';
 
 export interface AsyncProps {
     LoadingView: ComponentType;
@@ -6,7 +6,7 @@ export interface AsyncProps {
 }
 
 export interface AsyncComponent<TProps extends object = {}, TLoadingProps extends object = {}>
-    extends React.FC<TProps & TLoadingProps> {
-    Content: React.ComponentType<TProps>;
+    extends FC<TProps & TLoadingProps> {
+    Content: ComponentType<TProps>;
     Loading: ComponentType<TLoadingProps & Partial<TProps>>;
 }

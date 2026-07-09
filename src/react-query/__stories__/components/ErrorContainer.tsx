@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {InternalError} from '@gravity-ui/illustrations';
+import {InternalError, NotFound} from '@gravity-ui/illustrations';
 import type {PlaceholderContainerProps} from '@gravity-ui/uikit';
 import {Button, PlaceholderContainer, spacing} from '@gravity-ui/uikit';
 
@@ -13,6 +13,14 @@ export interface ErrorContainerProps
         ErrorViewProps {
     image?: PlaceholderContainerProps['image'];
 }
+
+const extractImage = (error: unknown) => {
+    if (error instanceof AppError && error.code === AppError.WELLKNOWN_CODES.NOT_FOUND) {
+        return <NotFound />;
+    }
+
+    return <InternalError />;
+};
 
 const extractTitle = (error: unknown) => {
     if (error instanceof AppError && error.title) {
@@ -52,7 +60,7 @@ export const ErrorContainer: React.FC<ErrorContainerProps> = ({
         <PlaceholderContainer
             direction={direction || 'column'}
             size={size || 'm'}
-            image={image || <InternalError />}
+            image={image || extractImage(error)}
             title={title || extractTitle(error)}
             description={description || extractDescription(error)}
             actions={
