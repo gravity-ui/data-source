@@ -14,8 +14,12 @@ export const DataInfiniteWrapper: React.FC<DataInfiniteWrapperProps> = ({
     children,
 }) => {
     const previousNode =
-        hasPreviousPage && typeof isFetchingPreviousPage === 'boolean' && fetchPreviousPage ? (
-            <MoreView type="prev" isLoading={isFetchingPreviousPage} onClick={fetchPreviousPage} />
+        hasPreviousPage && fetchPreviousPage ? (
+            <MoreView
+                type="prev"
+                isLoading={Boolean(isFetchingPreviousPage)}
+                onClick={fetchPreviousPage}
+            />
         ) : null;
     const nextNode = hasNextPage ? (
         <MoreView type="next" isLoading={isFetchingNextPage} onClick={fetchNextPage} />
