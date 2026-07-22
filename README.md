@@ -817,3 +817,28 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 ## License
 
 MIT License. See [LICENSE](LICENSE) file for details.
+
+## For AI agents
+
+A typed abstraction layer over `@tanstack/react-query` for declarative data fetching, cache invalidation, and loading-state UI — reach for it when you need a reusable, "port"-style data source instead of wiring `useQuery` + `DataLoader` boilerplate by hand across many components.
+
+### When to use
+
+- Repeating the same fetch + error + loading pattern in many components and wanting one typed `DataSource` to reuse.
+- Cache invalidation by tags (`invalidateTag('users')`) across several queries, or by source/params.
+- Infinite/paginated fetching with a normalized `loading` / `success` / `error` status and a `DataInfiniteLoader`.
+- Type-safe conditional queries via the `idle` symbol instead of juggling `{enabled: Boolean(x)}`.
+
+### When not to use
+
+- For a single, one-off `useQuery` call, use [`@tanstack/react-query`](https://tanstack.com/query/latest) directly — this package's `DataManager` indirection is overhead you do not need for one query.
+- To render tabular/grid data from a data source, pair it with [`@gravity-ui/table`](https://gravity-ui.com/components/table) or the `Table` from [`@gravity-ui/uikit`](https://gravity-ui.com/uikit) — this package handles fetching, not rendering.
+- To share and dedupe requests across a server render, use React Query's SSR/Hydration APIs directly; this package targets client-side `ClientDataManager`.
+
+### Common pitfalls
+
+- **Hallucinated hook `useFetch` / `useDataSource`** — the fetch hook is `useQueryData(dataSource, params, options?)`.
+- **Hallucinated `<QueryLoader>`** — the status/error wrapper component is `<DataLoader>` (and `<DataInfiniteLoader>` for pagination).
+- **Passing raw fetch functions to `makePlainQueryDataSource`** — wrap them with `skipContext(fetchFn)` so the context/fetch-context arguments are dropped.
+- **Forgetting the `DataManager` provider** — `useQueryData` reads from `DataManagerContext`; without a `ClientDataManager` provided, hooks throw.
+- **Using `enabled: false`** — prefer the `idle` symbol as the params argument for type-safe conditional fetching instead.
