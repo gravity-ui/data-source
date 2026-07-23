@@ -842,3 +842,7 @@ A typed abstraction layer over `@tanstack/react-query` for declarative data fetc
 - **Passing raw fetch functions to `makePlainQueryDataSource`** — wrap them with `skipContext(fetchFn)` so the context/fetch-context arguments are dropped.
 - **Forgetting the `DataManager` provider** — `useQueryData` reads from `DataManagerContext`; without a `ClientDataManager` provided, hooks throw.
 - **Using `enabled: false`** — prefer the `idle` symbol as the params argument for type-safe conditional fetching instead.
+
+## Documentation for AI agents
+
+Agent-readable documentation for the installed version is located in `node_modules/@gravity-ui/data-source/build/docs/INDEX.md`.
