@@ -38,10 +38,10 @@ export type PlainQueryDataSource<TParams, TRequest, TResponse, TData, TError> = 
         DataSourceKey
     >,
     ResultWrapper<
-        QueryObserverResult<ActualData<NoInfer<TData>, NoInfer<TResponse>>, NoInfer<TError>>,
-        NoInfer<TResponse>,
-        NoInfer<TData>,
-        NoInfer<TError>
+        QueryObserverResult<ActualData<TData, TResponse>, TError>,
+        TResponse,
+        TData,
+        TError
     >,
     QueryFunctionContext<DataSourceKey>
 > & {

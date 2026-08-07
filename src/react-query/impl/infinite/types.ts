@@ -46,13 +46,13 @@ export type InfiniteQueryDataSource<TParams, TRequest, TResponse, TData, TError>
     >,
     ResultWrapper<
         InfiniteQueryObserverResult<
-            InfiniteData<ActualData<NoInfer<TData>, NoInfer<TResponse>>, Partial<TRequest>>,
-            NoInfer<TError>
+            InfiniteData<ActualData<TData, TResponse>, Partial<TRequest>>,
+            TError
         >,
-        NoInfer<TRequest>,
-        NoInfer<TResponse>,
-        NoInfer<TData>,
-        NoInfer<TError>
+        TRequest,
+        TResponse,
+        TData,
+        TError
     >,
     QueryFunctionContext<DataSourceKey, Partial<NoInfer<TRequest>>>
 > & {
