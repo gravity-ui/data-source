@@ -5,6 +5,7 @@ import type {
     InfiniteQueryObserverResult,
     QueryFunctionContext,
     QueryKey,
+    RefetchOptions,
 } from '@tanstack/react-query';
 import type {Assign, Overwrite} from 'utility-types';
 
@@ -84,7 +85,7 @@ type ResultWrapper<TResult, TRequest, TResponse, TData, TError> =
               {
                   status: DataLoaderStatus;
                   data: Array<FlatArray<Array<ActualData<TData, TResponse>>, 1>>;
-                  refetch: () => Promise<void>;
+                  refetch: (options?: RefetchOptions) => Promise<void>;
               }
           > & {
               originalStatus: TResult['status'];

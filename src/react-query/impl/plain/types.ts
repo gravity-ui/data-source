@@ -4,6 +4,7 @@ import type {
     QueryKey,
     QueryObserverOptions,
     QueryObserverResult,
+    RefetchOptions,
 } from '@tanstack/react-query';
 import type {Assign, Overwrite} from 'utility-types';
 
@@ -57,7 +58,7 @@ type ResultWrapper<TResult, TResponse, TData, TError> =
               TResult,
               {
                   status: DataLoaderStatus;
-                  refetch: () => Promise<void>;
+                  refetch: (options?: RefetchOptions) => Promise<void>;
               }
           > & {originalStatus: TResult['status']}
         : never;
