@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.1](https://github.com/gravity-ui/data-source/compare/v0.10.0...v0.10.1) (2026-08-19)
+
+
+### Bug Fixes
+
+* **react-query:** drop NoInfer from data source state type ([#57](https://github.com/gravity-ui/data-source/issues/57)) ([1819349](https://github.com/gravity-ui/data-source/commit/1819349766c0cb6ae666b494f7e19c4c8c9e6845))
+* **react-query:** restore RefetchOptions argument in refetch type ([#61](https://github.com/gravity-ui/data-source/issues/61)) ([55609ca](https://github.com/gravity-ui/data-source/commit/55609ca938b7819d998558a8e8bd38790bd8eba2))
+
 ## [0.10.0](https://github.com/gravity-ui/data-source/compare/v0.9.0...v0.10.0) (2026-07-09)
 
 
