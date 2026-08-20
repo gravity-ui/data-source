@@ -94,7 +94,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
-    "@gravity-ui/app-builder": "^0.22.0",
+    "@gravity-ui/app-builder": "^0.52.0",
     "@gravity-ui/eslint-config": "^3.3.0",
     "@gravity-ui/illustrations": "^2.1.1",
     "@gravity-ui/prettier-config": "^1.1.0",
