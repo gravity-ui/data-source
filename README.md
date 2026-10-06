@@ -278,6 +278,27 @@ const {data, status, error, refetch, ...rest} = useQueryData(
 - `refetch` - Function to manually refetch data
 - Other React Query properties
 
+**Keeping an error visible between retries:**
+
+A query that has never resolved has no data, so React Query resets it to `pending` on every
+retry and drops the error. With a refetch interval, a window focus or a reconnect the error view
+is therefore replaced by the loading view for the duration of each request, and the screen
+blinks. Pass `keepPreviousError` to show the error until the retry brings a new result:
+
+```ts
+const {status, error} = useQueryData(
+  userDataSource,
+  {userId: 123},
+  {
+    refetchInterval: 15000,
+    keepPreviousError: true,
+  },
+);
+```
+
+A query that already has data is unaffected: React Query keeps its state as is. An explicit
+`refetch` still shows the loading state, so a retry requested by the user stays visible.
+
 #### `useQueryResponses(responses)`
 
 Combines multiple query responses into a single state.
