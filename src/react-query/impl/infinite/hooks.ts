@@ -14,6 +14,7 @@ import type {
     DataSourceResponse,
     DataSourceState,
 } from '../../../core';
+import {useKeepPreviousError} from '../../hooks/useKeepPreviousError';
 import {useRefetchInterval} from '../../hooks/useRefetchInterval';
 import {normalizeStatus} from '../../utils/normalizeStatus';
 import {warnDisabledRefetch} from '../../utils/warnDisabledRefetch';
@@ -42,6 +43,7 @@ const useInfiniteQueryDataOptions = <TDataSource extends AnyInfiniteQueryDataSou
     const {
         queryFn: queryFnOption,
         refetchInterval: refetchIntervalOption,
+        keepPreviousError: _keepPreviousError,
         ...restOptions
     } = composedOptions;
 
@@ -67,12 +69,20 @@ export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSou
 
     const isDisabled = composedOptions.enabled === false || composedOptions.queryFn === skipToken;
 
+    const {status, error, forget} = useKeepPreviousError(
+        extendedOptions.keepPreviousError,
+        normalizeStatus(state.status, state.fetchStatus),
+        state.error,
+        state.errorUpdatedAt,
+    );
+
     return {
         ...state,
-        status: normalizeStatus(state.status, state.fetchStatus),
+        status,
+        error,
         data: transformedData,
         originalStatus: state.status,
         originalData: state.data,
-        refetch: isDisabled ? warnDisabledRefetch : wrapRefetch(state.refetch),
+        refetch: isDisabled ? warnDisabledRefetch : wrapRefetch(state.refetch, forget),
     } as DataSourceState<TDataSource>;
 };
