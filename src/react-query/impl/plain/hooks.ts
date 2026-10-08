@@ -12,6 +12,7 @@ import type {
 } from '../../../core';
 import {useRefetchInterval} from '../../hooks/useRefetchInterval';
 import {normalizeStatus} from '../../utils/normalizeStatus';
+import {parseNullableValue} from '../../utils/parseNullableValue';
 import {warnDisabledRefetch} from '../../utils/warnDisabledRefetch';
 import {wrapRefetch} from '../../utils/wrapRefetch';
 
@@ -39,7 +40,11 @@ const usePlainQueryDataOptions = <TDataSource extends AnyPlainQueryDataSource>(
         ...restOptions
     } = composedOptions;
 
-    const {queryFn, refetchInterval} = useRefetchInterval(refetchIntervalOption, queryFnOption);
+    const {queryFn, refetchInterval} = useRefetchInterval(
+        refetchIntervalOption,
+        queryFnOption,
+        parseNullableValue,
+    );
 
     return {...restOptions, queryFn, refetchInterval};
 };

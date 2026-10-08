@@ -16,6 +16,7 @@ import type {
 } from '../../../core';
 import {useRefetchInterval} from '../../hooks/useRefetchInterval';
 import {normalizeStatus} from '../../utils/normalizeStatus';
+import {parseNullablePages} from '../../utils/parseNullablePages';
 import {warnDisabledRefetch} from '../../utils/warnDisabledRefetch';
 import {wrapRefetch} from '../../utils/wrapRefetch';
 
@@ -45,7 +46,11 @@ const useInfiniteQueryDataOptions = <TDataSource extends AnyInfiniteQueryDataSou
         ...restOptions
     } = composedOptions;
 
-    const {queryFn, refetchInterval} = useRefetchInterval(refetchIntervalOption, queryFnOption);
+    const {queryFn, refetchInterval} = useRefetchInterval(
+        refetchIntervalOption,
+        queryFnOption,
+        parseNullablePages,
+    );
 
     return {...restOptions, queryFn, refetchInterval};
 };
