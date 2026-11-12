@@ -22,4 +22,11 @@ export interface QueryDataAdditionalOptions<
     optimistic?: boolean | OptimisticConfig;
     /** Invalidate data configuration */
     invalidate?: boolean;
+    /**
+     * Keeps the error already shown while the failed query is being retried, instead of
+     * falling back to the loading state. Applies to a query that has no data yet: react-query
+     * resets such a query to `pending` on every retry, so an interval, a window focus or a
+     * reconnect makes the error view blink. An explicit `refetch` still shows loading.
+     */
+    keepPreviousError?: boolean;
 }

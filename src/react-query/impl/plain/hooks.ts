@@ -10,6 +10,7 @@ import type {
     DataSourceResponse,
     DataSourceState,
 } from '../../../core';
+import {useKeepPreviousError} from '../../hooks/useKeepPreviousError';
 import {useRefetchInterval} from '../../hooks/useRefetchInterval';
 import {normalizeStatus} from '../../utils/normalizeStatus';
 import {warnDisabledRefetch} from '../../utils/warnDisabledRefetch';
@@ -36,6 +37,7 @@ const usePlainQueryDataOptions = <TDataSource extends AnyPlainQueryDataSource>(
     const {
         queryFn: queryFnOption,
         refetchInterval: refetchIntervalOption,
+        keepPreviousError: _keepPreviousError,
         ...restOptions
     } = composedOptions;
 
@@ -56,10 +58,16 @@ export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
 
     const isDisabled = composedOptions.enabled === false || composedOptions.queryFn === skipToken;
 
+    const {state: displayState, forget} = useKeepPreviousError(
+        extendedOptions.keepPreviousError,
+        state,
+        composedOptions.queryKey,
+    );
+
     return {
-        ...state,
-        status: normalizeStatus(state.status, state.fetchStatus),
+        ...displayState,
+        status: normalizeStatus(displayState.status, displayState.fetchStatus),
         originalStatus: state.status,
-        refetch: isDisabled ? warnDisabledRefetch : wrapRefetch(state.refetch),
+        refetch: isDisabled ? warnDisabledRefetch : wrapRefetch(state.refetch, forget),
     } as DataSourceState<TDataSource>;
 };
