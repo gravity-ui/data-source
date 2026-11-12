@@ -58,17 +58,15 @@ export const usePlainQueryData = <TDataSource extends AnyPlainQueryDataSource>(
 
     const isDisabled = composedOptions.enabled === false || composedOptions.queryFn === skipToken;
 
-    const {status, error, forget} = useKeepPreviousError(
+    const {state: displayState, forget} = useKeepPreviousError(
         extendedOptions.keepPreviousError,
-        normalizeStatus(state.status, state.fetchStatus),
-        state.error,
-        state.errorUpdatedAt,
+        state,
+        composedOptions.queryKey,
     );
 
     return {
-        ...state,
-        status,
-        error,
+        ...displayState,
+        status: normalizeStatus(displayState.status, displayState.fetchStatus),
         originalStatus: state.status,
         refetch: isDisabled ? warnDisabledRefetch : wrapRefetch(state.refetch, forget),
     } as DataSourceState<TDataSource>;

@@ -69,17 +69,15 @@ export const useInfiniteQueryData = <TDataSource extends AnyInfiniteQueryDataSou
 
     const isDisabled = composedOptions.enabled === false || composedOptions.queryFn === skipToken;
 
-    const {status, error, forget} = useKeepPreviousError(
+    const {state: displayState, forget} = useKeepPreviousError(
         extendedOptions.keepPreviousError,
-        normalizeStatus(state.status, state.fetchStatus),
-        state.error,
-        state.errorUpdatedAt,
+        state,
+        composedOptions.queryKey,
     );
 
     return {
-        ...state,
-        status,
-        error,
+        ...displayState,
+        status: normalizeStatus(displayState.status, displayState.fetchStatus),
         data: transformedData,
         originalStatus: state.status,
         originalData: state.data,

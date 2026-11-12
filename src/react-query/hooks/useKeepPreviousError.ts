@@ -1,64 +1,65 @@
 import React from 'react';
 
-import type {DataLoaderStatus} from '../../core';
-
-export interface UseKeepPreviousErrorResult<TError> {
-    status: DataLoaderStatus;
-    error: TError | null;
-    /** Forgets the kept error, so the next loading state is shown as usual. */
-    forget: () => void;
-}
+import {hashKey} from '@tanstack/react-query';
+import type {QueryKey, QueryObserverResult} from '@tanstack/react-query';
 
 interface KeptError<TError> {
+    key: string;
     error: TError;
-    errorUpdatedAt: number;
 }
 
-/**
- * Keeps the error already shown on the screen while the failed query is being retried.
- *
- * A query that has never resolved has no data, so react-query resets its state to `pending`
- * every time the query starts again. The error is wiped at that moment, and a refetch triggered
- * by an interval, a window focus or a reconnect replaces the error view with a loading view for
- * the duration of the request. `errorUpdatedAt` survives that reset and is zero for a query that
- * has not failed yet, which tells a retry of the same error apart from the first load of another
- * query.
- *
- * @param enabled - whether the error should be kept while the query is retried
- * @param status - normalized status of the query
- * @param error - current error of the query
- * @param errorUpdatedAt - timestamp of the last error of the query
- * @returns status and error to render, and a callback that forgets the kept error
- */
-export const useKeepPreviousError = <TError>(
+export const useKeepPreviousError = <TData, TError>(
     enabled: boolean | undefined,
-    status: DataLoaderStatus,
-    error: TError | null,
-    errorUpdatedAt: number,
-): UseKeepPreviousErrorResult<TError> => {
+    state: QueryObserverResult<TData, TError>,
+    queryKey: QueryKey,
+): {state: QueryObserverResult<TData, TError>; forget: () => void} => {
     const keptError = React.useRef<KeptError<TError> | null>(null);
+    const forgotten = React.useRef(false);
+    const [, rerender] = React.useReducer((value: number) => value + 1, 0);
+    const key = hashKey(queryKey);
 
     const forget = React.useCallback(() => {
+        if (!keptError.current) {
+            return;
+        }
+
         keptError.current = null;
+        forgotten.current = true;
+        rerender();
     }, []);
 
-    if (!enabled) {
-        keptError.current = null;
-
-        return {status, error, forget};
-    }
-
-    if (error) {
-        keptError.current = {error, errorUpdatedAt};
-    } else if (status === 'success') {
+    if (!enabled || keptError.current?.key !== key) {
         keptError.current = null;
     }
 
-    const kept = keptError.current;
-
-    if (status === 'loading' && kept && kept.errorUpdatedAt === errorUpdatedAt) {
-        return {status: 'error', error: kept.error, forget};
+    if (state.status !== 'error') {
+        forgotten.current = false;
     }
 
-    return {status, error, forget};
+    if (enabled && state.status === 'error' && !forgotten.current) {
+        keptError.current = {key, error: state.error};
+    } else if (state.status === 'success') {
+        keptError.current = null;
+    }
+
+    if (enabled && state.status === 'pending' && keptError.current) {
+        return {
+            state: {
+                ...state,
+                status: 'error',
+                error: keptError.current.error,
+                isError: true,
+                isPending: false,
+                isSuccess: false,
+                isLoading: false,
+                isInitialLoading: false,
+                isLoadingError: true,
+                isRefetchError: false,
+                isRefetching: state.isFetching,
+            },
+            forget,
+        };
+    }
+
+    return {state, forget};
 };

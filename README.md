@@ -299,6 +299,10 @@ const {status, error} = useQueryData(
 A query that already has data is unaffected: React Query keeps its state as is. An explicit
 `refetch` still shows the loading state, so a retry requested by the user stays visible.
 
+The remembered error belongs to the mounted hook instance. It is not stored in the query
+cache and is lost when the hook unmounts. Remounting during a retry can therefore show loading.
+It is also cleared when the query key changes.
+
 #### `useQueryResponses(responses)`
 
 Combines multiple query responses into a single state.
